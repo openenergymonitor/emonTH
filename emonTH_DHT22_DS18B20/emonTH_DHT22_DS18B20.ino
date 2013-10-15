@@ -115,7 +115,7 @@ void setup() {
     else 
     {
       DS18B20=1; 
-      if (debug==1) Serial.println("Detected DS18B20..using for temperature reading");
+      if (debug==1) Serial.println("Detected DS18B20..using this for temperature reading");
     }
  digitalWrite(DS18B20_PWR, LOW);
  
@@ -126,12 +126,12 @@ void setup() {
   float h = dht.readHumidity();  float t = dht.readTemperature();
   if (isnan(t) || isnan(h))                                             // check if returns are valid, if they are NaN (not a number) then something went wrong!
     {
-      if (debug==1) Serial.println("Unable to find DHT22 Sensor..trying agin");
+      if (debug==1) Serial.println(" - Unable to find DHT22 Sensor..trying agin"); delay(100);
       Sleepy::loseSomeTime(1500); 
       float h = dht.readHumidity();  float t = dht.readTemperature();
       if (isnan(t) || isnan(h))   
       {
-        if (debug==1) Serial.println("Unable to find DHT22 Sensor for 2nd time..giving up");
+        if (debug==1) Serial.println(" - Unable to find DHT22 Sensor for 2nd time..giving up"); delay(100);
         DHT22_status=0;
       } 
     } 
@@ -204,6 +204,6 @@ void loop()
   //digitalWrite(LED,LOW);  
   
   Sleepy::loseSomeTime(time_between_readings*60*1000);                        //But ATMEGA328 into WDT sleep
-//Sleepy::loseSomeTime(1000);
+//Sleepy::loseSomeTime(3000);
 }
 
