@@ -37,9 +37,9 @@
 
 
 
-#define freq RF12_868MHZ                                              // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
-const int nodeID = 17;                                                // emonth temperature RFM12B node ID - should be unique on network
-const int networkGroup = 1;                                           // emonth RFM12B wireless network group - needs to be same as emonBase and emonGLCD
+#define freq RF12_433MHZ                                              // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
+const int nodeID = 19;                                                // emonth temperature RFM12B node ID - should be unique on network
+const int networkGroup = 210;                                           // emonth RFM12B wireless network group - needs to be same as emonBase and emonGLCD
                                                                       //DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), lower resolution means lower power
 
 const int time_between_readings= 1;                                   //in min
@@ -263,8 +263,8 @@ void loop()
 byte oldADCSRA=ADCSRA;
 byte oldADCSRB=ADCSRB;
 byte oldADMUX=ADMUX;   
-//Sleepy::loseSomeTime(time_between_readings*60*1000);  
-Sleepy::loseSomeTime(5000);
+Sleepy::loseSomeTime(time_between_readings*60*1000);  
+//Sleepy::loseSomeTime(5000);
 ADCSRA=oldADCSRA; // restore ADC state
 ADCSRB=oldADCSRB;
 ADMUX=oldADMUX;
