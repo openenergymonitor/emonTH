@@ -1,10 +1,12 @@
 /*
-  emonTH V1.4 LowPower DHT22 Humidity & Temperature & DS18B20 Node Example 
+  emonTH V1.4 Low Power DHT22 Humidity & Temperature & DS18B20 Temperature Node Example 
 
-  Checkes at startup for presence of a DS18B20, DHT22 or both
-  If it finds both sensors the temperature value will be taken from the Ds18B20 and humidity from DHT22
+  Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
+  If it finds both sensors the temperature value will be taken from the DS18B20 and humidity from DHT22
   If it finds only DS18B20 then no humidity value will be reported
   If it finds only a DHT22 then both temperature and humidity values will be obtained from this sesor
+  
+  Technical hardware documentation wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH
  
   Part of the openenergymonitor.org project
   Licence: GNU GPL V3
@@ -123,15 +125,14 @@ void setup() {
   pinMode(LED,OUTPUT); digitalWrite(LED,HIGH);                     //Status LED on
   
  //################################################################################################################################
- //Power Save  - turn off what we don't need
+ //Power Save  - turn off what we don't need - http://www.nongnu.org/avr-libc/user-manual/group__avr__power.html
  ////################################################################################################################################
-  ADCSRA =0;
-  ACSR |= (1 << ACD); // disable Analog comparator    
+  //ADCSRA =0;                            //needed for ADC to be re-enabled during loop()
+  ACSR |= (1 << ACD);                     // disable Analog comparator    
   power_adc_disable();
-  if (debug==0) power_usart0_disable();
-  //power_spi_disable();  /do that a bit later, after we power RFM12b down
-  power_twi_disable();
-//  power_timer0_disable();  / /necessary for the DS18B20 library
+  if (debug==0) power_usart0_disable();  //disable serial UART
+  power_twi_disable();                   //Disable the Two Wire Interface module.
+//  power_timer0_disable();              //don't disable necessary for the DS18B20 library
   power_timer1_disable();
 
 
@@ -150,7 +151,7 @@ void setup() {
   
   if (numSensors==0)
     {
-      if (debug==1) Serial.println("Unable to find DS18B20 Temperature Sensor");
+      if (debug==1) Serial.println("Unable to find DS18B20 Temp Sensor");
       DS18B20=0; 
     } 
     else 
@@ -190,7 +191,6 @@ if (debug==1) delay(200);
   //################################################################################################################################
   
   rf12_initialize(nodeID, freq, networkGroup);                          // initialize RFM12B
-  rf12_control(0xC000);                                                 // set low-battery level to 2.2V
   rf12_sleep(RF12_SLEEP);
    power_spi_disable();  
    
@@ -235,13 +235,13 @@ void loop()
 }
   
   power_adc_enable();
-  emonth.battery=int(analogRead(BATT_ADC)*0.3225806);                    //take battery voltatge reading
+  emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
   power_adc_disable();                                               
   
   
   if (debug==1) 
   {
-    Serial.print (emonth.humidity); Serial.print(" "); Serial.print(emonth.temp); Serial.print(" ");  Serial.println(emonth.battery);
+    Serial.print (emonth.temp); Serial.print(" "); Serial.print(emonth.humidity); Serial.print(" ");  Serial.println(emonth.battery);
     delay(20);
   }
 
@@ -258,13 +258,12 @@ void loop()
   //dodelay(100);
   //digitalWrite(LED,LOW);  
   
-//Sleepy::loseSomeTime(time_between_readings*60*1000);                        //But ATMEGA328 into WDT sleep
 
 byte oldADCSRA=ADCSRA;
 byte oldADCSRB=ADCSRB;
 byte oldADMUX=ADMUX;   
 Sleepy::loseSomeTime(time_between_readings*60*1000);  
-//Sleepy::loseSomeTime(5000);
+//Sleepy::loseSomeTime(2000);
 ADCSRA=oldADCSRA; // restore ADC state
 ADCSRB=oldADCSRB;
 ADMUX=oldADMUX;
