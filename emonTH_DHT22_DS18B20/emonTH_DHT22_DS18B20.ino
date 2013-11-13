@@ -104,8 +104,6 @@ void setup() {
    pinMode(LED,OUTPUT); digitalWrite(LED,HIGH);                     //Status LED on
    
    rf12_initialize(nodeID, freq, networkGroup);                          // initialize RFM12B
-   rf12_sleep(RF12_SLEEP);
-   
    for (int i=0; i<10; i++)                                              //Send RFM12B test sequence (for factory testing)
    {
      emonth.temp=i; 
@@ -114,6 +112,7 @@ void setup() {
    }
   rf12_sendWait(2);
   emonth.temp=0;
+  rf12_sleep(RF12_SLEEP);
    
    
   if (Serial) debug = 1; else debug=0;                              //if serial UART to USB is connected show debug O/P. If not then disable serial
