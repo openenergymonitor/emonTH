@@ -100,6 +100,22 @@ byte allAddress [4][8];  // 8 bytes per address
 //################################################################################################################################
 void setup() {
 //################################################################################################################################
+  
+   pinMode(LED,OUTPUT); digitalWrite(LED,HIGH);                     //Status LED on
+   
+   rf12_initialize(nodeID, freq, networkGroup);                          // initialize RFM12B
+   rf12_sleep(RF12_SLEEP);
+   
+   for (int i=0; i<10; i++)                                              //Send RFM12B test sequence (for factory testing)
+   {
+     emonth.temp=i; 
+     rf12_sendNow(0, &emonth, sizeof emonth);
+     delay(100);
+   }
+  rf12_sendWait(2);
+  emonth.temp=0;
+   
+   
   if (Serial) debug = 1; else debug=0;                              //if serial UART to USB is connected show debug O/P. If not then disable serial
   
     if (debug==1)
@@ -122,7 +138,6 @@ void setup() {
   pinMode(BATT_ADC, INPUT);
   digitalWrite(DHT22_PWR,LOW);
 
-  pinMode(LED,OUTPUT); digitalWrite(LED,HIGH);                     //Status LED on
   
  //################################################################################################################################
  //Power Save  - turn off what we don't need - http://www.nongnu.org/avr-libc/user-manual/group__avr__power.html
@@ -134,7 +149,7 @@ void setup() {
   power_twi_disable();                   //Disable the Two Wire Interface module.
 //  power_timer0_disable();              //don't disable necessary for the DS18B20 library
   power_timer1_disable();
-
+  power_spi_disable(); 
 
   //################################################################################################################################
   //Setup and for presence of DS18B20
@@ -186,13 +201,12 @@ if (debug==1) delay(200);
     DHT22_status=1;
     if (debug==1) Serial.println("Detected DHT22");
     }   
- 
+ Serial.print(DS18B20); Serial.print(DHT22_status);
  if (debug==1) delay(200);
+ 
   //################################################################################################################################
   
-  rf12_initialize(nodeID, freq, networkGroup);                          // initialize RFM12B
-  rf12_sleep(RF12_SLEEP);
-   power_spi_disable();  
+
    
   digitalWrite(LED,LOW);
 }
@@ -207,6 +221,16 @@ if (debug==1) delay(200);
 void loop()
 //################################################################################################################################
 { 
+  
+  if ((DS18B20==0) && (DHT22_status==0))        //if neither DS18B20 or DHT22 is detected flash the LED then goto forever sleep
+  {
+   for (int i=0; i<20; i++)
+   {
+     digitalWrite(LED, HIGH); delay(200); digitalWrite(LED,LOW); delay(200);
+   }
+    cli();                                      //stop responding to interrupts 
+    Sleepy::powerDown();                        //sleep forever
+  }
 
   if (DS18B20==1)
   {
