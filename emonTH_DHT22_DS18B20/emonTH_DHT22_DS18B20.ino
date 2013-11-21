@@ -2,7 +2,7 @@
   emonTH V1.4 Low Power DHT22 Humidity & Temperature & DS18B20 Temperature Node Example 
 
   Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
-  If it finds both sensors the temperature value will be taken from the DS18B20 and humidity from DHT22
+  If it finds both sensors the temperature value will be taken from the DS18B20 (external) and DHT22 (internal) and humidity from DHT22
   If it finds only DS18B20 then no humidity value will be reported
   If it finds only a DHT22 then both temperature and humidity values will be obtained from this sesor
   
@@ -78,6 +78,7 @@ boolean DS18B20;                                                     //create fl
 
 typedef struct {                                                    //RFM12B RF payload datastructure
   	  int temp;
+          int temp_external;
           int humidity;    
           int battery;          	                                      
 } Payload;
@@ -120,7 +121,7 @@ void setup() {
     if (debug==1)
   {
     Serial.begin(9600);
-    Serial.println("emonTH DHT22 example"); 
+    Serial.println("emonTH"); 
     Serial.println("OpenEnergyMonitor.org");
     Serial.print("Node: "); 
     Serial.print(nodeID); 
@@ -130,6 +131,7 @@ void setup() {
     if (freq == RF12_915MHZ) Serial.print("915Mhz"); 
     Serial.print(" Network: "); 
     Serial.println(networkGroup);
+    delay(100);
   }
   
   pinMode(DHT22_PWR,OUTPUT);
@@ -150,31 +152,7 @@ void setup() {
   power_timer1_disable();
   power_spi_disable(); 
 
-  //################################################################################################################################
-  //Setup and for presence of DS18B20
-  //################################################################################################################################
-  digitalWrite(DS18B20_PWR, HIGH); delay(50); 
-  sensors.begin();
-  sensors.setWaitForConversion(false);                             //disable automatic temperature conversion to reduce time spent awake, conversion will be implemented manually in sleeping http://harizanov.com/2013/07/optimizing-ds18b20-code-for-low-power-applications/ 
-  numSensors=(sensors.getDeviceCount()); 
-  
-  byte j=0;                                        // search for one wire devices and
-                                                   // copy to device address arrays.
-  while ((j < numSensors) && (oneWire.search(allAddress[j])))  j++;
-  digitalWrite(DS18B20_PWR, LOW);
-  
-  if (numSensors==0)
-    {
-      if (debug==1) Serial.println("Unable to find DS18B20 Temp Sensor");
-      DS18B20=0; 
-    } 
-    else 
-    {
-      DS18B20=1; 
-      if (debug==1) Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20..using this for temperature reading");
-  }
-if (debug==1) delay(200);
- //################################################################################################################################
+
  
  //################################################################################################################################
  //Test for presence of DHT22
@@ -198,14 +176,41 @@ if (debug==1) delay(200);
     else 
     {
     DHT22_status=1;
-    if (debug==1) Serial.println("Detected DHT22");
+    if (debug==1) Serial.println("Detected DHT22 temp & humidity sesnor");
     }   
- Serial.print(DS18B20); Serial.print(DHT22_status);
- if (debug==1) delay(200);
+ 
  
   //################################################################################################################################
   
-
+    //################################################################################################################################
+  //Setup and for presence of DS18B20
+  //################################################################################################################################
+  digitalWrite(DS18B20_PWR, HIGH); delay(50); 
+  sensors.begin();
+  sensors.setWaitForConversion(false);                             //disable automatic temperature conversion to reduce time spent awake, conversion will be implemented manually in sleeping http://harizanov.com/2013/07/optimizing-ds18b20-code-for-low-power-applications/ 
+  numSensors=(sensors.getDeviceCount()); 
+  
+  byte j=0;                                        // search for one wire devices and
+                                                   // copy to device address arrays.
+  while ((j < numSensors) && (oneWire.search(allAddress[j])))  j++;
+  digitalWrite(DS18B20_PWR, LOW);
+  
+  if (numSensors==0)
+    {
+      if (debug==1) Serial.println("No DS18B20 detected");
+      DS18B20=0; 
+    } 
+    else 
+    {
+      DS18B20=1; 
+      if (debug==1) Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
+      if (DHT22_status==1) Serial.print("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
+  }
+if (debug==1) delay(200);
+ //################################################################################################################################
+  
+//Serial.print(DS18B20); Serial.print(DHT22_status);
+ //if (debug==1) delay(200);
    
   digitalWrite(LED,LOW);
 }
@@ -239,7 +244,11 @@ void loop()
      dodelay(ASYNC_DELAY); //Must wait for conversion, since we use ASYNC mode
      float temp=(sensors.getTempC(allAddress[0]));
      digitalWrite(DS18B20_PWR, LOW);
-     if ((temp<125.0) && (temp>-40.0)) emonth.temp=(temp*10);            //if reading is within range for the sensor convert float to int ready to send via RF
+     if ((temp<125.0) && (temp>-40.0))
+     {
+      if (DHT22_status==0) emonth.temp=(temp*10);            //if DHT22 is not present assume DS18B20 is primary sensor (internal)
+      if (DHT22_status==1) emonth.temp_external=(temp*10);   //if DHT22 is present assume DS18B20 is external sensor wired into terminal block
+     }
   }
   
  
