@@ -192,7 +192,7 @@ void setup() {
   {
     DS18B20=1; 
     if (debug==1) Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
-    if (DHT22_status==1) Serial.print("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
+    if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
   }
   if (debug==1) delay(200);
   
@@ -231,8 +231,8 @@ void loop()
     digitalWrite(DS18B20_PWR, LOW);
     if ((temp<125.0) && (temp>-40.0))
     {
-      if (DHT22_status==0) emonth.temp=(temp*10);            //if DHT22 is not present assume DS18B20 is primary sensor (internal)
-      if (DHT22_status==1) emonth.temp_external=(temp*10);   //if DHT22 is present assume DS18B20 is external sensor wired into terminal block
+      if (DHT22_status==0) emonth.temp=(temp*10);            // if DHT22 is not present assume DS18B20 is primary sensor (internal)
+      if (DHT22_status==1) emonth.temp_external=(temp*10);   // if DHT22 is present assume DS18B20 is external sensor wired into terminal block
     }
   }
   
@@ -242,11 +242,10 @@ void loop()
     dodelay(2000);                                             //sleep for 1.5 - 2's to allow sensor to warm up
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     emonth.humidity = ((dht.readHumidity())*10);
-    if (DS18B20==0) 
-    {
-      float temp=(dht.readTemperature());
-      if ((temp<85.0) && (temp>-40.0)) emonth.temp = (temp*10);
-    }
+
+    float temp=(dht.readTemperature());
+    if ((temp<85.0) && (temp>-40.0)) emonth.temp = (temp*10);
+
     digitalWrite(DHT22_PWR,LOW); 
   }
   
@@ -257,11 +256,24 @@ void loop()
   
   if (debug==1) 
   {
-    Serial.print("Temperature: ");
-    Serial.print(emonth.temp/10.0); 
-    Serial.print("C, Humidity: ");
-    Serial.print(emonth.humidity/10.0); 
-    Serial.print("%, Battery voltage: ");  
+    if (DS18B20)
+    {
+      Serial.print("DS18B20 Temperature: ");
+      if (DHT22_status) Serial.print(emonth.temp_external/10.0); 
+      if (!DHT22_status) Serial.print(emonth.temp/10.0);
+      Serial.print("C, ");
+    }
+    
+    if (DHT22_status)
+    {
+      Serial.print("DHT22 Temperature: ");
+      Serial.print(emonth.temp/10.0); 
+      Serial.print("C, DHT22 Humidity: ");
+      Serial.print(emonth.humidity/10.0);
+      Serial.print("%, ");
+    }
+    
+    Serial.print("Battery voltage: ");  
     Serial.print(emonth.battery/10.0);
     Serial.println("V");
     delay(100);
