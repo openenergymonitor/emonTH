@@ -134,9 +134,7 @@ void setup() {
   //################################################################################################################################
   // Power Save  - turn off what we don't need - http://www.nongnu.org/avr-libc/user-manual/group__avr__power.html
   //################################################################################################################################
-  // ADCSRA =0;                           //needed for ADC to be re-enabled during loop()
   ACSR |= (1 << ACD);                     // disable Analog comparator    
-  power_adc_disable();
   if (debug==0) power_usart0_disable();   //disable serial UART
   power_twi_disable();                    //Disable the Two Wire Interface module.
   // power_timer0_disable();              //don't disable necessary for the DS18B20 library
@@ -249,9 +247,9 @@ void loop()
     digitalWrite(DHT22_PWR,LOW); 
   }
   
-  power_adc_enable();
+  
   emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
-  power_adc_disable();                                               
+                                               
   
   
   if (debug==1) 
@@ -296,7 +294,7 @@ void loop()
   byte oldADCSRB=ADCSRB;
   byte oldADMUX=ADMUX;   
   Sleepy::loseSomeTime(time_between_readings*60*1000);  
-  // Sleepy::loseSomeTime(2000);
+  //Sleepy::loseSomeTime(2000);
   ADCSRA=oldADCSRA; // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
