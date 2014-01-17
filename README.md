@@ -18,6 +18,8 @@ Builds on JeeLabs, Adafruit and Miles Burton
 
 * **Simple emonTH Sensor Test** - Barebones testing sketches for both DS18B20 and DHT22 sensors
 
+* **emonTH_DHT22_dual_DS18B20** - derived from the main emonTH firmware, but capable of monitoring two (or more) DS18B20 external sensors. You'll need to discover your sensors' addresses to make use of this script - discover them with i.e. https://github.com/openenergymonitor/emonTxFirmware/tree/master/emonTxV2/emonTx_temperature_examples/temperature_search
+
 **Note:**
 * Default RFM12B settings: 433Mhz, network: 210, Node: 19 
 * Readings are converted to integer when sent over RF multiple by 0.1 in emoncms to restore reading
