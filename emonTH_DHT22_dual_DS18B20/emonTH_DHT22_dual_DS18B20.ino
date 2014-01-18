@@ -119,13 +119,15 @@ boolean debug;
   
  Hardcoding these guarantees emonCMS inputs won't flip around if you replace or add sensors.
  Use one of the address finding sketches to determine your sensors' unique addresses.
+
+ See 'emonTH temperature search' utility sketch in 'Simple emonTH Sensor Test' folder
  
  Extend this if you have more sensors.
  */
 DeviceAddress EXT_SENSOR1 = { 
-  0x28, 0xE7, 0x6A, 0x44, 0x05, 0x0, 0x0, 0xC5 };
+  0x28, 0x46, 0x59, 0x44, 0x05, 0x00, 0x00, 0x64 };
 DeviceAddress EXT_SENSOR2 = { 
-  0x28, 0x33, 0xEB, 0x91, 0x05, 0x0, 0x0, 0x5B };
+  0x28, 0x9B, 0x24, 0x44, 0x05, 0x00, 0x00, 0x6B };
 
 boolean EXT_SENSOR1_PRESENT;  
 boolean EXT_SENSOR2_PRESENT;  
