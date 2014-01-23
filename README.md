@@ -2,8 +2,18 @@
 
 Part of the openenergymonitor.org project
 
-Main emonTH page: 
-xxxxx
+Main emonTH page: http://openenergymonitor.org/emon/modules/emonTH
+
+Technical Hardware Wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH 
+Schematic + CAD: http://solderpad.com/git/openenergymon/emonth
+
+Design & related Blog posts: 
+http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
+http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
+http://openenergymonitor.blogspot.com/2013/10/emonth-update-software-power.html
+http://openenergymonitor.blogspot.com/2013/10/aa-battery-considerations.html
+http://openenergymonitor.blogspot.com/2013/11/hardware-manufacture-begins-part-1.html
+http://openenergymonitor.blogspot.com/2014/01/emonth-multiple-ds18b20-sensors.html
 
 Builds on JeeLabs, Adafruit and Miles Burton 
 
