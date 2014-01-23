@@ -26,7 +26,7 @@
  */
 #include <avr/power.h>
 #include <avr/sleep.h>
-#include <RFu_JeeLib.h>                                   
+#include <RFu_JeeLib.h>
 
 ISR(WDT_vect) { 
   Sleepy::watchdogEvent(); 
@@ -58,11 +58,11 @@ ISR(WDT_vect) {
  - how long to allow for an ack to be received
  */
 #define FREQUENCY RF12_433MHZ 
-const int NETWORK_GROUP = 210;
-const int NODE_ID       = 6;
+const byte NETWORK_GROUP = 210;
+const byte NODE_ID       = 7;
 
-const int RETRY_MAX_ATTEMPTS   = 3;
-const int MAX_ACK_TIME_MS      = 50;
+const byte RETRY_MAX_ATTEMPTS   = 3;
+const byte MAX_ACK_TIME_MS      = 50;
 
 /*
  Monitoring configuration
@@ -90,18 +90,18 @@ const int MAX_ACK_TIME_MS      = 50;
  Roughly, the node will report every MS_DELAY_BETWEEN_READS / 1000 * NUMBER_OF_READS_PER_PAYLOAD seconds.
  
  */
-const int MS_SENSOR_POWER_UP = 25;
-const int MS_DELAY_BETWEEN_READS = 1000;
-const int NUMBER_OF_READS_PER_PAYLOAD = 300; 
+const byte MS_SENSOR_POWER_UP = 25;
+const int MS_DELAY_BETWEEN_READS = 500;
+const int NUMBER_OF_READS_PER_PAYLOAD = 600; 
 const int PULSE_THRESHOLD_VALUE = 150;  
 const int RESET_THRESHOLD_VALUE = 300;  
-const int MIN_SEC_BETWEEN_PULSES = 5;
+const byte MIN_SEC_BETWEEN_PULSES = 5;
 
 // emonTH pin allocations  
-const int BATT_ADC        = 1;
-const int PHOTOSENSOR_PWR = 5;
-const int LED             = 9;
-const int ADC_PIN         = A5; 
+const byte BATT_ADC        = 1;
+const byte PHOTOSENSOR_PWR = 5;
+const byte LED             = 9;
+const byte ADC_PIN         = A5; 
 
 
 // RFM12B RF payload datastructure
@@ -129,20 +129,19 @@ void setup() {
   if (debug) Serial.begin(9600);
 
   print_welcome_message();  
+
   set_pin_modes();
   
   // LED on
-  digitalWrite(LED, HIGH);
+  flash_led(500);
 
   // Initialize RFM12B
   rf12_initialize(NODE_ID, FREQUENCY, NETWORK_GROUP);                       
   rf12_sleep(RF12_SLEEP);
 
+  // Low power settings
   reduce_power();
   
-  // LED off
-  digitalWrite(LED, LOW);
-
 } // end of setup
 
 /** 
@@ -157,15 +156,17 @@ const boolean ROLL_OVER_PULSE_COUNTER = false;
 
 
 /**
- * Perform temperature and humidity / gas logging
+ * Perform gas logging
+ * Should be extended to cope with on-board temp sensor too.
  */
 void loop()
 {   
   // Perform a certain number of gas monitoring cycles.
   int readCount;
   for (readCount = 0; readCount <= NUMBER_OF_READS_PER_PAYLOAD; readCount++){
+    flash_led(50);
     take_IR_reading();
-    sleep_until_next_reading(MS_DELAY_BETWEEN_READS - MS_SENSOR_POWER_UP);
+    sleep_until_next_reading(MS_DELAY_BETWEEN_READS - MS_SENSOR_POWER_UP - 50);
   }
 
   // Use the gathered data to update the gas part of the RF payload
@@ -211,32 +212,32 @@ void payloadUpdateGas( int readCount ){
  * Rolls over the pulse counter until it can be delivered.
  */
 boolean sendPayloadWithAck(){
-  power_spi_enable();
 
+  print_payload();
+  
   for (byte i = 0; i <= RETRY_MAX_ATTEMPTS; ++i) { // tx and wait for ack up to RETRY_LIMIT times
-    
+    power_spi_enable();
+        
     rf12_sleep(RF12_WAKEUP);
 
-    while (!rf12_canSend())
-      rf12_recvDone();
-    rf12_sendStart(RF12_HDR_ACK, &rfPayload, sizeof rfPayload);
+    rf12_sendNow(RF12_HDR_ACK, &rfPayload, sizeof rfPayload);
     rf12_sendWait(2); // Wait for RF to finish sending while in standby mode
     byte acked = waitForAck(); // Wait for ACK
     
     rf12_sleep(RF12_SLEEP);
-    
-    power_spi_disable();
-
+  
     if (acked)
       return true;
     
+    power_spi_disable();
     // Wait for a while before trying again.
-    Sleepy::loseSomeTime(MS_DELAY_BETWEEN_READS*1000); 
-    // Take a reading between each retry attempt. This means retries don't block the reflector processing significantly.
+    Sleepy::loseSomeTime(MS_DELAY_BETWEEN_READS); 
+    // Take a reading between each retry attempt. This means retries don't block the reflector processing significantly,
+    // since the retry delay is the same as the delay between reflector tests in normal operation.
     take_IR_reading(); 
 
   }
-  
+    
   return false;
 }
 
@@ -269,6 +270,7 @@ boolean resetSinceLastPulse = true;
  */
 void take_IR_reading()
 {  
+  
   // Power on sensor and grab a reading.
   digitalWrite(PHOTOSENSOR_PWR, HIGH);                
   dodelay(MS_SENSOR_POWER_UP);          
@@ -280,10 +282,6 @@ void take_IR_reading()
   
   if (reading < lowestReading){
     lowestReading = reading;
-    if (debug) Serial.print(reading);
-    if (debug) Serial.println(" L");
-  } else {
-    if (debug) Serial.println(reading);
   }
   
   cumulativeReading += reading;
@@ -297,8 +295,6 @@ void take_IR_reading()
     pulseCount++;
     lastReflectionTime = millis();
     resetSinceLastPulse = false;
-
-    if (debug) Serial.println("R");
   }
  
   
@@ -328,8 +324,8 @@ void flash_led (int duration){
   digitalWrite(LED,HIGH);
   dodelay(duration);
   digitalWrite(LED,LOW); 
+  dodelay(duration);
 }
-
 
 /**
  * Dumps useful intro to serial
@@ -367,7 +363,6 @@ void print_welcome_message()
   dodelay(100);
 }
 
-
 /**
  * For debugging purposes: print the payload as it will shortly be sent to the emonBASE
  * Wise to extend this if you have extra sensors wired in.
@@ -392,7 +387,6 @@ void print_payload()
     
   Serial.println();
 }
-
 
 /**
  * Power-friendly delay
