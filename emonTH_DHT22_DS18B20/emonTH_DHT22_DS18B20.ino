@@ -35,6 +35,8 @@
   -------------------------------------------------------------------------------------------------------------
 */
 
+boolean debug=0;
+
 #define RF_freq RF12_433MHZ                                              // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
 const int nodeID = 19;                                                // EmonTH temperature RFM12B node ID - should be unique on network
 const int networkGroup = 210;                                         // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
@@ -81,7 +83,7 @@ typedef struct {                                                      // RFM12B 
 Payload emonth;
 
 
-boolean debug;
+
 int numSensors; 
 //addresses of sensors, MAX 4!!  
 byte allAddress [4][8];                                              // 8 bytes per address
@@ -108,7 +110,7 @@ void setup() {
   
   rf12_sleep(RF12_SLEEP);
   
-  if (Serial) debug = 1; else debug=0;                              //if serial UART to USB is connected show debug O/P. If not then disable serial
+  //if (Serial) debug = 1; else debug=0;                              //if serial UART to USB is connected show debug O/P. If not then disable serial - DOES NOT WORK http://openenergymonitor.org/emon/node/3930
   
   if (debug==1)
   {
