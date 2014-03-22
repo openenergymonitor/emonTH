@@ -98,7 +98,7 @@ void setup() {
   rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
   
   // Send RFM12B test sequence (for factory testing)
-  for (int i=0; i<10; i++)                                           
+  for (int i=10; i==0; i--)                                           
   {
     emonth.temp=i; 
     rf12_sendNow(0, &emonth, sizeof emonth);
@@ -191,8 +191,11 @@ void setup() {
   else 
   {
     DS18B20=1; 
-    if (debug==1) Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
-    if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
+    if (debug==1) {
+      Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
+       if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
+    }
+    
   }
   if (debug==1) delay(200);
   
