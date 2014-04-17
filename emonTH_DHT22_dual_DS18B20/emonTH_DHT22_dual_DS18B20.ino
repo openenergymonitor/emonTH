@@ -78,7 +78,7 @@ const int NODE_ID       = 19;
   - Required delay when reading DS18B20
       9bit: 95ms,  10bit: 187ms,  11bit: 375ms,   12bit: 750ms
  */
-const int MINS_BETWEEN_READINGS = 1;
+const int SECS_BETWEEN_READINGS = 60;
 const int TEMPERATURE_PRECISION = 11; 
 const int ASYNC_DELAY           = 375;
 
@@ -405,7 +405,7 @@ void sleep_until_next_reading(){
   byte oldADCSRA=ADCSRA;
   byte oldADCSRB=ADCSRB;
   byte oldADMUX=ADMUX;   
-  Sleepy::loseSomeTime(MINS_BETWEEN_READINGS*60*1000);  
+  Sleepy::loseSomeTime(SECS_BETWEEN_READINGS*1000);  
   ADCSRA=oldADCSRA; // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
