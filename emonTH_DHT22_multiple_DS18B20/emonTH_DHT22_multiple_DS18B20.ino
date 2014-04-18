@@ -81,6 +81,8 @@ const int NODE_ID       = 19;
  
  const int ASYNC_DELAY           = 375; // delay for onewire sensors to send data
  
+ const int MaxOnewire             = 20;  //maximum number of sensors on the onewire bus - too big of a number may cause ram overflows.
+ 
  const int TEMPERATURE_PRECISION = 11;  // onewire temperature sensor precisionn. details found below. - default = 11
  /*
   NOTE: There is a trade off between power consumption and sensor resolution.
@@ -127,7 +129,7 @@ typedef struct {
   int battery;    
   int humidity;                                                  
   int internalTemp;       	                                      
-  int onewireTemp[20];	                                      
+  int onewireTemp[MaxOnewire];	                                      
   // If you have more sensors, add further variables here.
 } 
 Payload;
@@ -292,8 +294,9 @@ void initialise_DS18B20()
   // Grab a count of devices on the wire
   numberOfDevices = sensors.getDeviceCount();
 
-// not needed
- // EXT_SENSOR1_PRESENT = sensors.getAddress(EXT_SENSOR1, 0);
+  if (numberOfDevices > MaxOnewire) {
+    // too many devices!!! (put actual error message code here)
+  }
  
  // bus info
   if (debug){
@@ -439,7 +442,7 @@ void take_ds18b20_reading ()
   {
     // Search the wire for address
     if(sensors.getAddress(tempDeviceAddress, i))
-	{	
+      {	
            sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
            
            // Get readings. We must wait for ASYNC_DELAY due to power-saving (waitForConversion = false)
@@ -448,11 +451,11 @@ void take_ds18b20_reading ()
            float temp1=(sensors.getTempC(tempDeviceAddress));
            
            // Payload will maintain previous reading unless the temperature is within range.
-           if (temperature_in_range(temp1))
-           rfPayload[3].onewireTemp[i] = temp1 * 10; 
-	} 
+           if (temperature_in_range(temp1)){
+           rfPayload[3].onewireTemp[i] = temp1 * 10; // add sensor temp to rfpayload in onewireTemp array - not currently working.
+	   } 
 	//else ghost device! Check your power requirements and cabling
-	
+      }
   }
 
   // Power down
