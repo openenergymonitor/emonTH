@@ -44,11 +44,6 @@
 #include <DallasTemperature.h>
 #include "DHT.h"
 
-// Attach JeeLib sleep function to Atmega328 watchdog - enables MCU to be put into sleep mode between readings to reduce power consumption 
-ISR(WDT_vect) { 
-  Sleepy::watchdogEvent(); 
-} 
-
  
 /*
  Network configuration
@@ -82,14 +77,13 @@ const int NODE_ID       = 21;
  
  const int ASYNC_DELAY           = 375; // delay for onewire sensors to send data
  
- const int MaxOnewire            = 40;  //maximum number of sensors on the onewire bus - too big of a number may allow ram overflows.
- // supports howevermany onewire temperature sensors that this number allows for. increase if you have more sensors. 
-                         // watch out for ram overflows though..... 
+ // could be taken out in favor of setting the array to consume the rest of the 128 byte data packet.
+ const int MaxOnewire            = 20;  // Maximum number of sensors on the onewire bus - too big of a number may create ram overflows or too big of a data packet (max packet wsize is 128 bytes)
  
  const int TEMPERATURE_PRECISION = 11;  // onewire temperature sensor precisionn. details found below. - default = 11
  /*
-  NOTE: There is a trade off between power consumption and sensor resolution.
-        A higher resolution will keep the processor awake longer - approximate values found below.
+  NOTE: - There is a trade off between power consumption and sensor resolution.
+        - A higher resolution will keep the processor awake longer - Approximate values found below.
                                      
   - DS18B20 temperature precision:
       9bit: 0.5C,  10bit: 0.25C,  11bit: 0.1125C, 12bit: 0.0625C
@@ -106,6 +100,7 @@ const int DS18B20_PWR  = 5;  // default 5
 const int DHT_PWR      = 6;  // default 6
 const int LED          = 9;  // default 9
 const int DHT_PIN      = 16; // should be 18 for actual emonth board
+#define DHTType DHT22 // defines dht sensor type. Switch "DHT22" to "DHT11" if you have the corrisponding sensor.
 const int ONE_WIRE_BUS = 9;  // should be pin 19 for actual emonth board.
 
 // end of configuration
@@ -113,8 +108,13 @@ const int ONE_WIRE_BUS = 9;  // should be pin 19 for actual emonth board.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // start of part that does stuff
 
-// On board DHT22
-DHT dht(DHT_PIN, DHT22);
+// Attach JeeLib sleep function to Atmega328 watchdog - enables MCU to be put into sleep mode between readings to reduce power consumption 
+ISR(WDT_vect) { 
+  Sleepy::watchdogEvent(); 
+} 
+
+// On board DHT22 / DHT11
+DHT dht(DHT_PIN, DHTType); // define the dht sensor and data pin to the dht library.
 boolean DHT_PRESENT;                                                  
 
 // OneWire for DS18B20
@@ -125,15 +125,14 @@ int numberOfDevices; // Number of temperature devices found
 DeviceAddress tempDeviceAddress; // We'll use this variable to store a found onewire device address
 
  
-
 // RFM12B RF payload datastructure
-typedef struct {       
+typedef struct {  // must be kept to less than 128 bytes     
   int battery;    
   int humidity;                                                  
   int internalTemp;       	                                      
-  int onewireTemp[];	  
+  int onewireTemp[MaxOnewire];	  
 } 
-Payload;
+Payload; // create datatype payload
 
 Payload rfPayload; // make a new variable "rfPayload" with type "payload"
 
@@ -176,7 +175,7 @@ void setup() {
 } // end of setup
 
 /**
- * Perform temperature and humidity logging
+ * Perform temperature and humidity sending
  */
 void loop()
 { 
@@ -209,7 +208,7 @@ void loop()
   }
 
   // That's it - wait until next time :)
-  sleep_until_next_reading();
+  dodelay(SECS_BETWEEN_READINGS*1000);
 }
 
 
@@ -294,10 +293,6 @@ void initialise_DS18B20()
 
   // Grab a count of devices on the wire
   numberOfDevices = sensors.getDeviceCount();
-
-  if (numberOfDevices > MaxOnewire) {
-    // too many devices!!! (put actual error message code here)
-  }
  
  // bus info
   if (debug){
@@ -307,12 +302,22 @@ void initialise_DS18B20()
   Serial.print("Found ");
   Serial.print(numberOfDevices, DEC);
   Serial.println(" devices.");
+  
+  if (numberOfDevices > MaxOnewire) {
+    Serial.println("Too many devices!!!");
+    Serial.print("maximum allowed number of devices is ");
+    Serial.println(MaxOnewire);
+  }
 
   // report parasite power requirements
   Serial.print("Parasite power is: "); 
   if (sensors.isParasitePowerMode()) Serial.println("ON");
   else Serial.println("OFF");
   } 
+ 
+ if (numberOfDevices > MaxOnewire) { // Detect if too many devices are connected
+    numberOfDevices = 0; // set number of devices to zero to prevent overpopulated bus from being read.
+  }
  
  // Loop through each device, print out address
   for(int i=0;i<numberOfDevices; i++)
@@ -343,7 +348,7 @@ void initialise_DS18B20()
               
 	      if (debug) {
 		Serial.print("Found ghost device at ");
-		Serial.print(i, DEC);
+                Serial.print(i, DEC);
 		Serial.print(" but could not detect address. Check power and cabling");
               }
 	}
@@ -506,7 +511,7 @@ Serial.print( rfPayload.onewireTemp[1] /10.0);
         Serial.println("C");
        }
   } else {
-    Serial.println(" no onewire sensors");
+    Serial.println("No onewire sensors");
   }
   
   if (DHT_PRESENT){
@@ -571,14 +576,14 @@ void print_welcome_message()
  */
 void reduce_power()
 {
- // ACSR |= (1 << ACD);              // Disable Analog comparator    
- // power_twi_disable();             // Disable the Two Wire Interface module.
+  ACSR |= (1 << ACD);              // Disable Analog comparator    
+  power_twi_disable();             // Disable the Two Wire Interface module.
 
-  //power_timer1_disable();          // Timer 1
-  //power_spi_disable();             // Serial peripheral interface
+  power_timer1_disable();          // Timer 1
+  power_spi_disable();             // Serial peripheral interface
 
-    if (!debug){
-   // power_usart0_disable();        // Disable serial UART if not connected
+  if (!debug){
+   power_usart0_disable();        // Disable serial UART if not connected
   }  
 
   power_timer0_enable();           // Necessary for the DS18B20 library.
@@ -590,8 +595,8 @@ void reduce_power()
  */
 void dodelay(unsigned int ms)
 {
-  delay(ms);
-  /*
+  //delay(ms);
+  // /*
   byte oldADCSRA=ADCSRA;
   byte oldADCSRB=ADCSRB;
   byte oldADMUX=ADMUX;
@@ -601,25 +606,7 @@ void dodelay(unsigned int ms)
   ADCSRA=oldADCSRA;         // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
-  */
-}
-
-//////////////////////////////////////////////////
-/**
- * To save power, we go to sleep between readings
- */
-void sleep_until_next_reading(){
-  delay(SECS_BETWEEN_READINGS*1000);
-  
-  /* // having problems. trying disabling
-  byte oldADCSRA=ADCSRA;
-  byte oldADCSRB=ADCSRB;
-  byte oldADMUX=ADMUX;   
-  Sleepy::loseSomeTime(SECS_BETWEEN_READINGS*1000);  
-  ADCSRA=oldADCSRA; // restore ADC state
-  ADCSRB=oldADCSRB;
-  ADMUX=oldADMUX;
-  */
+  // */
 }
 
 
