@@ -2,7 +2,7 @@
  emonTH low power temperature & humidity node
  ============================================
  
- !!! this is currently a hogepoge of code! do not use!!!
+ !!! this is currently a hogepoge of code! do not use!!! (take this out when working)
  
  Ambient humidity & temperature (DHT22 on-board)
  Multiple remote temperature (DS18B20)
@@ -13,9 +13,10 @@
  2. Humidity (with DHT22 on-board sensor, otherwise zero)
  3. Ambient temperature (with DHT22 on-board sensor, otherwise zero)
  4. External temperature 1 (first DS18B20)
- 5. External temperature 2 (second DS18B20)....
- 6. and so on. Should automatically detect any DS18B20 connected to the one wire bus. 
- note - if you connect additional DS18B20 sensors, the rf packet sensor order may change. check your inputs in emoncms after adding additional sensors and reassign accordingly.
+ 5. External temperature 2 (second DS18B20) and so on. Should automatically detect any DS18B20 connected to the one wire bus. 
+ 
+ Note - If you connect additional DS18B20 sensors after node has been set up, the sensor order may change. 
+      - Check your inputs in emoncms after adding additional sensors and reassign feeds accordingly.
  
  -----------------------------------------------------------------------------------------------------------  
  Technical hardware documentation wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH
@@ -23,7 +24,7 @@
  Part of the openenergymonitor.org project
  Licence: GNU GPL V3
  
- Authors: Dave McCraw, Marshall Scholz
+ Authors: Dave McCraw (original creator), Marshall Scholz (added autimatic onewire scanning)
  
  Based on the emonTH_DHT22_DS18B20 sketch by Glyn Hudson and the dallas temp library tester-simple sketch.
  
@@ -71,17 +72,19 @@ ISR(WDT_vect) {
  */
 #define FREQUENCY RF12_433MHZ 
 const int NETWORK_GROUP = 210;
-const int NODE_ID       = 19;
+const int NODE_ID       = 21;
 
 
 // Monitoring configuration
 // ========================
  
- const int SECS_BETWEEN_READINGS = 60;  // How long to wait between readings, in seconds. - default = 60
+ const int SECS_BETWEEN_READINGS = 5;  // How long to wait between readings, in seconds. - default = 60
  
  const int ASYNC_DELAY           = 375; // delay for onewire sensors to send data
  
- const int MaxOnewire             = 20;  //maximum number of sensors on the onewire bus - too big of a number may cause ram overflows.
+ const int MaxOnewire            = 40;  //maximum number of sensors on the onewire bus - too big of a number may allow ram overflows.
+ // supports howevermany onewire temperature sensors that this number allows for. increase if you have more sensors. 
+                         // watch out for ram overflows though..... 
  
  const int TEMPERATURE_PRECISION = 11;  // onewire temperature sensor precisionn. details found below. - default = 11
  /*
@@ -98,12 +101,12 @@ const int NODE_ID       = 19;
 
 
 // emonTH pin allocations 
-const int BATT_ADC     = 1; // adc 1
-const int DS18B20_PWR  = 5; 
-const int DHT_PWR      = 6;
-const int LED          = 9;
-const int DHT_PIN      = 18; 
-const int ONE_WIRE_BUS = 19;  
+const int BATT_ADC     = 1;  // adc 1
+const int DS18B20_PWR  = 5;  // default 5
+const int DHT_PWR      = 6;  // default 6
+const int LED          = 9;  // default 9
+const int DHT_PIN      = 16; // should be 18 for actual emonth board
+const int ONE_WIRE_BUS = 9;  // should be pin 19 for actual emonth board.
 
 // end of configuration
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,16 +124,14 @@ DallasTemperature sensors(&oneWire);
 int numberOfDevices; // Number of temperature devices found
 DeviceAddress tempDeviceAddress; // We'll use this variable to store a found onewire device address
 
-//int onewireTemp[20];  // supports howevermany onewire temperature sensors that this number allows for. increase if you have more sensors. 
-                         // watch out for ram overflows though.....  
+ 
 
 // RFM12B RF payload datastructure
 typedef struct {       
   int battery;    
   int humidity;                                                  
   int internalTemp;       	                                      
-  int onewireTemp[MaxOnewire];	                                      
-  // If you have more sensors, add further variables here.
+  int onewireTemp[];	  
 } 
 Payload;
 
@@ -452,7 +453,7 @@ void take_ds18b20_reading ()
            
            // Payload will maintain previous reading unless the temperature is within range.
            if (temperature_in_range(temp1)){
-           rfPayload[3].onewireTemp[i] = temp1 * 10; // add sensor temp to rfpayload in onewireTemp array - not currently working.
+           rfPayload.onewireTemp[i] = temp1 * 10; // add sensor temp to rfpayload in onewireTemp array
 	   } 
 	//else ghost device! Check your power requirements and cabling
       }
@@ -488,21 +489,25 @@ void print_payload()
     return;
   
   Serial.println("emonTH payload: ");
-
+Serial.print( rfPayload.onewireTemp[1] /10.0); 
   Serial.print("  Battery voltage: ");
   Serial.print(rfPayload.battery/10.0);
   Serial.println("V");
   
 
- /* if (EXT_SENSOR1_PRESENT){
-    Serial.print( rfPayload.externalTemp1/10.0); 
-    Serial.println("C");
-  }
-  else {
-    Serial.println(" not present");
-  }
-  */
   
+  if (numberOfDevices >= 1){
+    for(int i=0;i<numberOfDevices; i++)
+      {
+        Serial.print("sensor ");
+        Serial.print(i);
+        Serial.print(" = ");
+        Serial.print( rfPayload.onewireTemp[i] /10.0); 
+        Serial.println("C");
+       }
+  } else {
+    Serial.println(" no onewire sensors");
+  }
   
   if (DHT_PRESENT){
     Serial.print("  Internal DHT22 temperature: ");
@@ -516,6 +521,8 @@ void print_payload()
     Serial.println("Internal DHT22 sensor: not present");
   }
   
+  Serial.print("rfpayload is ");
+  //Serial.print(rfPayload); // print the whole rfpayload for software debugging.
   Serial.println();
 }
 
@@ -528,7 +535,8 @@ void print_welcome_message()
   if (!debug)
     return;
 
-  Serial.begin(9600);
+  delay(50);
+  Serial.begin(4800);
 
   Serial.println("emonTH : OpenEnergyMonitor.org");
   
@@ -563,14 +571,14 @@ void print_welcome_message()
  */
 void reduce_power()
 {
-  ACSR |= (1 << ACD);              // Disable Analog comparator    
-  power_twi_disable();             // Disable the Two Wire Interface module.
+ // ACSR |= (1 << ACD);              // Disable Analog comparator    
+ // power_twi_disable();             // Disable the Two Wire Interface module.
 
-  power_timer1_disable();          // Timer 1
-  power_spi_disable();             // Serial peripheral interface
+  //power_timer1_disable();          // Timer 1
+  //power_spi_disable();             // Serial peripheral interface
 
     if (!debug){
-    power_usart0_disable();        // Disable serial UART if not connected
+   // power_usart0_disable();        // Disable serial UART if not connected
   }  
 
   power_timer0_enable();           // Necessary for the DS18B20 library.
@@ -582,6 +590,8 @@ void reduce_power()
  */
 void dodelay(unsigned int ms)
 {
+  delay(ms);
+  /*
   byte oldADCSRA=ADCSRA;
   byte oldADCSRB=ADCSRB;
   byte oldADMUX=ADMUX;
@@ -591,6 +601,7 @@ void dodelay(unsigned int ms)
   ADCSRA=oldADCSRA;         // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
+  */
 }
 
 //////////////////////////////////////////////////
@@ -598,6 +609,9 @@ void dodelay(unsigned int ms)
  * To save power, we go to sleep between readings
  */
 void sleep_until_next_reading(){
+  delay(SECS_BETWEEN_READINGS*1000);
+  
+  /* // having problems. trying disabling
   byte oldADCSRA=ADCSRA;
   byte oldADCSRB=ADCSRB;
   byte oldADMUX=ADMUX;   
@@ -605,6 +619,7 @@ void sleep_until_next_reading(){
   ADCSRA=oldADCSRA; // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
+  */
 }
 
 
