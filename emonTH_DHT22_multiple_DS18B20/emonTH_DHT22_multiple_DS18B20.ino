@@ -2,10 +2,8 @@
  emonTH low power temperature & humidity node
  ============================================
  
- !!! this is currently a hogepoge of code! do not use!!! (take this out when working)
- 
  Ambient humidity & temperature (DHT22 on-board)
- Multiple remote temperature (DS18B20)
+ Multiple remote temperature (DS18B20) - Support for other onewire sensors such as the MAX31850K may be added at a later date. (If you want to do this yourself and contribute, go for it!)
  
  Provides the following inputs to emonCMS:
  
@@ -13,10 +11,14 @@
  2. Humidity (with DHT22 on-board sensor, otherwise zero)
  3. Ambient temperature (with DHT22 on-board sensor, otherwise zero)
  4. External temperature 1 (first DS18B20)
- 5. External temperature 2 (second DS18B20) and so on. Should automatically detect any DS18B20 connected to the one wire bus. 
+ 5. External temperature 2 (second DS18B20) 
+ 6. ... and so on. Should automatically detect any DS18B20 connected to the one wire bus. (Up to 70 sensors ordered by address.)
  
- Note - If you connect additional DS18B20 sensors after node has been set up, the sensor order may change. 
-      - Check your inputs in emoncms after adding additional sensors and reassign feeds accordingly.
+ Notes - If you connect additional DS18B20 sensors after node has been set up, the sensor order may change. 
+       - Check your inputs in emoncms after adding additional sensors and reassign feeds accordingly.
+       -
+       - This sketch will also draw more power with more connected sensors and is optimised for getting good data rather than low power consumption.
+       - If you have a large number of sensors it is reccomended that you run your node off an external power supply. 
  
  -----------------------------------------------------------------------------------------------------------  
  Technical hardware documentation wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH
@@ -26,7 +28,7 @@
  
  Authors: Dave McCraw (original creator), Marshall Scholz (added autimatic onewire scanning)
  
- Based on the emonTH_DHT22_DS18B20 sketch by Glyn Hudson and the dallas temp library tester-simple sketch.
+ Based on the emonTH_DHT22_DS18B20 sketch by Glyn Hudson and the DallasTemperature Tester sketch.
  
  THIS SKETCH REQUIRES:
  
@@ -47,7 +49,7 @@
  
 /*
  Network configuration
- =====================
+ =======================================================================================================================================
  
   - RFM12B frequency can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
   - RFM12B wireless network group - needs to be same as emonBase and emonGLCD
@@ -65,22 +67,41 @@
  31	- Special allocation in JeeLib RFM12 driver - Node31 can communicate with nodes on any network group
  -------------------------------------------------------------------------------------------------------------
  */
-#define FREQUENCY RF12_433MHZ 
-const int NETWORK_GROUP = 210;
-const int NODE_ID       = 21;
+#define FREQUENCY RF12_433MHZ   // Transmitter frequency. Only one should be uncommented at a time.
+//#define FREQUENCY RF12_915MHZ 
+//#define FREQUENCY RF12_868MHZ 
+const int NETWORK_GROUP = 210;  // Default 210
+const int NODE_ID       = 19;   // Dafault 19
+
+
 
 
 // Monitoring configuration
-// ========================
+// ======================================================================================================================================
+ const int SECS_BETWEEN_READINGS = 60;  // Default = "60" How long to wait between readings, in seconds.
  
- const int SECS_BETWEEN_READINGS = 5;  // How long to wait between readings, in seconds. - default = 60
- 
- const int ASYNC_DELAY           = 375; // delay for onewire sensors to send data
- 
- // could be taken out in favor of setting the array to consume the rest of the 128 byte data packet.
- const int MaxOnewire            = 20;  // Maximum number of sensors on the onewire bus - too big of a number may create ram overflows or too big of a data packet (max packet wsize is 128 bytes)
- 
- const int TEMPERATURE_PRECISION = 11;  // onewire temperature sensor precisionn. details found below. - default = 11
+
+
+
+
+// emonTH pin allocations 
+// ======================================================================================================================================
+const int BATT_ADC     = 1;  // Default 1 - adc 1
+const int LED          = 9;  // Default 9
+
+// DHT sensor configuration
+// ======================================================================================================================================
+#define DHTType DHT22        // Default "DHT22" - Defines dht sensor type. Switch "DHT22" to "DHT11" if you have the corrisponding sensor.
+const int DHT_PWR      = 6;  // Default 6
+const int DHT_PIN      = 18; // Default 18
+
+// Onewire bus configaturation
+// ======================================================================================================================================
+const int DS18B20_PWR  = 5;  // Default 5
+const int ONE_WIRE_BUS = 19;  // Default 19
+
+const int ASYNC_DELAY           = 375; // Default 375 - Delay for onewire sensors to respond
+const int TEMPERATURE_PRECISION = 12;  // Default 12  - Onewire temperature sensor precisionn. details found below.
  /*
   NOTE: - There is a trade off between power consumption and sensor resolution.
         - A higher resolution will keep the processor awake longer - Approximate values found below.
@@ -94,24 +115,58 @@ const int NODE_ID       = 21;
  */
 
 
-// emonTH pin allocations 
-const int BATT_ADC     = 1;  // adc 1
-const int DS18B20_PWR  = 5;  // default 5
-const int DHT_PWR      = 6;  // default 6
-const int LED          = 9;  // default 9
-const int DHT_PIN      = 16; // should be 18 for actual emonth board
-#define DHTType DHT22 // defines dht sensor type. Switch "DHT22" to "DHT11" if you have the corrisponding sensor.
-const int ONE_WIRE_BUS = 9;  // should be pin 19 for actual emonth board.
 
 // end of configuration
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// start of part that does stuff
+// ======================================================================================================================================
+// ======================================================================================================================================
+// Start of part that does stuff
+
+
+
+
+// Global variables
+boolean debug; // variable to store is debug is avalable or not. 
+int numberOfDevices; // Number of temperature devices found
+DeviceAddress tempDeviceAddress; // We'll use this variable to store a found onewire device address
+int PayloadLength = 6; // initial, non variable length in bytes. 2 bytes per int / variable in array. 
+                       // The default "6" currently covers the battery, humidity, and internal temp variables
+                       // This will be incremented according to the number of onewire sensors on the bus.
+
+ 
+ #define MaxOnewire 70  // Maximum number of sensors on the onewire bus - too big of a number may create too big of a data packet (max packet size is 128 bytes) - defiult "70" to allow for full 128 byte packet length
+ 
+// RFM12B RF payload datastructure
+typedef struct {  // must be kept to less than 128 bytes     
+  int battery;   // 2 bytes for each int 
+  int humidity;                                                  
+  int internalTemp;   // 6 bytes of 126 byte(maximum) rf packet used for all these. this number goes into the "PayloadLength" inital value above   	                                      
+  int onewireTemp[MaxOnewire];	  // 2 additional bytes used for each sensor - maximum of 70 sensors supported with this arrangement and rf packet type. (If you had to hook up more than 70 sensors to one node, I pity you.)
+} Payload_t; // create datatype payload
+
+  Payload_t rfPayload; // make a new variable "rfPayload" with type "payload"'
+
+/* 
+!! note on rf packet structures with atmega processors!!
+The atmega processor line is a "little endian" or "wrong endian" type processor. 
+This means that with each integer with a length of two bytes (one 16 bit integer, one byte = 8 bits)
+As memory is devided into adressed blocks of 8 bits (or one byte) you have to put two blocks together to get a single integer.
+This is where things get tricky. With Big endian processors you have the blocks arranged logically. (Going in bit order)BLOCK1[32768, 16384, 8192, 4096, 2048, 1024,512, 256] BLOCK2[ 128, 64, 32, 16, 8, 4, 2, 1 ]
+In little endian this is reversed. where the first block is up to the 128'th bit value. Such as this. BLOCK1[ 128, 64, 32, 16, 8, 4, 2, 1 ] BLOCK2[32768, 16384, 8192, 4096, 2048, 1024,512, 256]
+The difference that this makes is that as the radio transmission is split up into individual bytes you will get TWO values corrisponding to one integer on the other end to reconstruct this integer, you need to know the order for parsing.
+This is why a value such as "415" will end up on the other end as "159 1". The bytes that make up the integer are seperated and "swithced". 
+If you are no good at bit minipulation, when parsing this data (or just troubleshooting it!)-
+- you can just multiply the second part that is "1" in the above example and corrisponds to BLOCK2 in the little endian archetecture by 256 and add it to the first number. The "159" in the above example or BLOCK1 in the little endian archetecture.
+
+Thanks to Rich Dreher for helping Marshall Scholz on this when discussing structs. 
+*/
+
+
 
 // Attach JeeLib sleep function to Atmega328 watchdog - enables MCU to be put into sleep mode between readings to reduce power consumption 
 ISR(WDT_vect) { 
   Sleepy::watchdogEvent(); 
 } 
+
 
 // On board DHT22 / DHT11
 DHT dht(DHT_PIN, DHTType); // define the dht sensor and data pin to the dht library.
@@ -121,23 +176,6 @@ boolean DHT_PRESENT;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-int numberOfDevices; // Number of temperature devices found
-DeviceAddress tempDeviceAddress; // We'll use this variable to store a found onewire device address
-
- 
-// RFM12B RF payload datastructure
-typedef struct {  // must be kept to less than 128 bytes     
-  int battery;    
-  int humidity;                                                  
-  int internalTemp;       	                                      
-  int onewireTemp[MaxOnewire];	  
-} 
-Payload; // create datatype payload
-
-Payload rfPayload; // make a new variable "rfPayload" with type "payload"
-
-
-boolean debug; // variable to store is debug is avalable or not. 
  
  
 
@@ -174,6 +212,9 @@ void setup() {
 
 } // end of setup
 
+
+
+
 /**
  * Perform temperature and humidity sending
  */
@@ -198,7 +239,8 @@ void loop()
   // power up radio and send data packet
   power_spi_enable();  
   rf12_sleep(RF12_WAKEUP);
-  rf12_sendNow(0, &rfPayload, sizeof rfPayload);
+//rf12_sendNow(0, &rfPayload, sizeof(rfPayload)); // old sender that cumputed message length
+  rf12_sendNow(0, &rfPayload, PayloadLength); // new sender that only sends used variables calculated in onewire initilisation. 
   rf12_sendWait(2);
   rf12_sleep(RF12_SLEEP);
   power_spi_disable();  
@@ -210,6 +252,9 @@ void loop()
   // That's it - wait until next time :)
   dodelay(SECS_BETWEEN_READINGS*1000);
 }
+
+
+
 
 
 //////////////////////////////////////////////////
@@ -224,6 +269,9 @@ void set_pin_modes()
   pinMode(BATT_ADC,    INPUT);
 }
 
+
+
+
 /////////////////////////////////////////////////
 /**
  * Flash the LED for the stated period
@@ -233,6 +281,9 @@ void flash_led (int duration){
   dodelay(duration);
   digitalWrite(LED,LOW); 
 }
+
+
+
 
 //////////////////////////////////////////////////
 /**
@@ -270,13 +321,16 @@ void initialise_DHT22()
   digitalWrite(DHT_PWR,LOW);                                          
 }
 
+
+
+
 //////////////////////////////////////////////////
 /**
  * Find the expected DS18B20 sensors
  *
- * automatically scans the entire onewire bus for sensors and stores their adressess in the device adresses array.
+ * Automatically scans the entire onewire bus for sensors and stores their adressess in the device adresses array.
  * 
- * should support a large number of sensors. tested up to four sensors currently.
+ * Should support up to 70 sensors. (limited by size of data packet) Currently tested up to four sensors.
  */
 void initialise_DS18B20()
 {
@@ -293,6 +347,20 @@ void initialise_DS18B20()
 
   // Grab a count of devices on the wire
   numberOfDevices = sensors.getDeviceCount();
+ 
+ // Detect if too many devices are connected 
+  if (numberOfDevices > MaxOnewire) 
+  { 
+    numberOfDevices = MaxOnewire; // Set number of devices to maximum allowed sensors to prevent the extra sensors from being included.
+  }
+  
+ // add bytes that the sensors will use onto the payloadlength. Every sensor is a 16  bit integer that will take up 2 bytes
+  PayloadLength = PayloadLength + (numberOfDevices * 2);
+  
+  if (PayloadLength >= 128) // check if payload length is out of acceptable values
+  {
+    PayloadLength = 128; // set length to maximim acceptable value
+  }
  
  // bus info
   if (debug){
@@ -315,9 +383,6 @@ void initialise_DS18B20()
   else Serial.println("OFF");
   } 
  
- if (numberOfDevices > MaxOnewire) { // Detect if too many devices are connected
-    numberOfDevices = 0; // set number of devices to zero to prevent overpopulated bus from being read.
-  }
  
  // Loop through each device, print out address
   for(int i=0;i<numberOfDevices; i++)
@@ -349,19 +414,16 @@ void initialise_DS18B20()
 	      if (debug) {
 		Serial.print("Found ghost device at ");
                 Serial.print(i, DEC);
-		Serial.print(" but could not detect address. Check power and cabling");
+		Serial.println(" but could not detect address. Check power and cabling");
               }
 	}
   }
 
-
-
-    
-    
-   // if (!EXT_SENSOR1_PRESENT){ }
-
   // Switch off for now
   digitalWrite(DS18B20_PWR, LOW);
+  
+  Serial.print(" rf packet length calculated at: ");
+  Serial.println( PayloadLength );
 }
 
 // function to print a device address
@@ -373,6 +435,9 @@ void printAddress(DeviceAddress deviceAddress)
     Serial.print(deviceAddress[i], HEX);
   }
 }
+
+
+
 
 //////////////////////////////////////////////////
 /** 
