@@ -12,7 +12,7 @@
  3. Ambient temperature (with DHT22 on-board sensor, otherwise zero)
  4. External temperature 1 (first DS18B20)
  5. External temperature 2 (second DS18B20) 
- 6. ... and so on. Should automatically detect any DS18B20 connected to the one wire bus. (Up to 70 sensors ordered by address.)
+ 6. ... and so on. Should automatically detect any DS18B20 connected to the one wire bus. (Up to 60 sensors ordered by address.)
  
  Notes - If you connect additional DS18B20 sensors after node has been set up, the sensor order may change. 
        - Check your inputs in emoncms after adding additional sensors and reassign feeds accordingly.
@@ -133,14 +133,14 @@ int PayloadLength = 6; // initial, non variable length in bytes. 2 bytes per int
                        // This will be incremented according to the number of onewire sensors on the bus.
 
  
- #define MaxOnewire 70  // Maximum number of sensors on the onewire bus - too big of a number may create too big of a data packet (max packet size is 128 bytes) - defiult "70" to allow for full 128 byte packet length
+ #define MaxOnewire 60  // Maximum number of sensors on the onewire bus - too big of a number may create too big of a data packet (max packet size is 128 bytes) - defiult "60" to allow for full 128 byte packet length
  
 // RFM12B RF payload datastructure
 typedef struct {  // must be kept to less than 128 bytes     
   int battery;   // 2 bytes for each int 
   int humidity;                                                  
   int internalTemp;   // 6 bytes of 126 byte(maximum) rf packet used for all these. this number goes into the "PayloadLength" inital value above   	                                      
-  int onewireTemp[MaxOnewire];	  // 2 additional bytes used for each sensor - maximum of 70 sensors supported with this arrangement and rf packet type. (If you had to hook up more than 70 sensors to one node, I pity you.)
+  int onewireTemp[MaxOnewire];	  // 2 additional bytes used for each sensor - maximum of 61 sensors supported with this arrangement and rf packet type. (If you had to hook up more than 60 sensors to one node, I pity you.)
 } Payload_t; // create datatype payload
 
   Payload_t rfPayload; // make a new variable "rfPayload" with type "payload"'
@@ -330,7 +330,7 @@ void initialise_DHT22()
  *
  * Automatically scans the entire onewire bus for sensors and stores their adressess in the device adresses array.
  * 
- * Should support up to 70 sensors. (limited by size of data packet) Currently tested up to four sensors.
+ * Should support up to 60 sensors. (limited by size of data packet) Currently tested up to four sensors.
  */
 void initialise_DS18B20()
 {
