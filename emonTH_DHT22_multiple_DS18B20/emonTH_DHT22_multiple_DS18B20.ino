@@ -74,15 +74,10 @@ const int NETWORK_GROUP = 210;  // Default 210
 const int NODE_ID       = 19;   // Dafault 19
 
 
-
-
 // Monitoring configuration
 // ======================================================================================================================================
  const int SECS_BETWEEN_READINGS = 60;  // Default = "60" How long to wait between readings, in seconds.
  
-
-
-
 
 // emonTH pin allocations 
 // ======================================================================================================================================
@@ -101,7 +96,7 @@ const int DS18B20_PWR  = 5;  // Default 5
 const int ONE_WIRE_BUS = 19;  // Default 19
 
 const int ASYNC_DELAY           = 375; // Default 375 - Delay for onewire sensors to respond
-const int TEMPERATURE_PRECISION = 12;  // Default 12  - Onewire temperature sensor precisionn. details found below.
+const int TEMPERATURE_PRECISION = 12;  // Default 12  - Onewire temperature sensor precisionn. Details found below.
  /*
   NOTE: - There is a trade off between power consumption and sensor resolution.
         - A higher resolution will keep the processor awake longer - Approximate values found below.
@@ -133,7 +128,7 @@ int PayloadLength = 6; // initial, non variable length in bytes. 2 bytes per int
                        // This will be incremented according to the number of onewire sensors on the bus.
 
  
- #define MaxOnewire 60  // Maximum number of sensors on the onewire bus - too big of a number may create too big of a data packet (max packet size is 128 bytes) - defiult "60" to allow for full 128 byte packet length
+ #define MaxOnewire 60  // Maximum number of sensors on the onewire bus - too big of a number may create too big of a data packet (max packet size is 128 bytes) - defiult "60" to allow for (almost) full 128 byte packet length. 61 would make it full
  
 // RFM12B RF payload datastructure
 typedef struct {  // must be kept to less than 128 bytes     
@@ -144,21 +139,6 @@ typedef struct {  // must be kept to less than 128 bytes
 } Payload_t; // create datatype payload
 
   Payload_t rfPayload; // make a new variable "rfPayload" with type "payload"'
-
-/* 
-!! note on rf packet structures with atmega processors!!
-The atmega processor line is a "little endian" or "wrong endian" type processor. 
-This means that with each integer with a length of two bytes (one 16 bit integer, one byte = 8 bits)
-As memory is devided into adressed blocks of 8 bits (or one byte) you have to put two blocks together to get a single integer.
-This is where things get tricky. With Big endian processors you have the blocks arranged logically. (Going in bit order)BLOCK1[32768, 16384, 8192, 4096, 2048, 1024,512, 256] BLOCK2[ 128, 64, 32, 16, 8, 4, 2, 1 ]
-In little endian this is reversed. where the first block is up to the 128'th bit value. Such as this. BLOCK1[ 128, 64, 32, 16, 8, 4, 2, 1 ] BLOCK2[32768, 16384, 8192, 4096, 2048, 1024,512, 256]
-The difference that this makes is that as the radio transmission is split up into individual bytes you will get TWO values corrisponding to one integer on the other end to reconstruct this integer, you need to know the order for parsing.
-This is why a value such as "415" will end up on the other end as "159 1". The bytes that make up the integer are seperated and "swithced". 
-If you are no good at bit minipulation, when parsing this data (or just troubleshooting it!)-
-- you can just multiply the second part that is "1" in the above example and corrisponds to BLOCK2 in the little endian archetecture by 256 and add it to the first number. The "159" in the above example or BLOCK1 in the little endian archetecture.
-
-Thanks to Rich Dreher for helping Marshall Scholz on this when discussing structs. 
-*/
 
 
 
