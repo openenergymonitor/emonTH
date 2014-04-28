@@ -98,7 +98,7 @@ void setup() {
   rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
   
   // Send RFM12B test sequence (for factory testing)
-  for (int i=10; i==0; i--)                                           
+  for (int i=10; i>-1; i--)                                         
   {
     emonth.temp=i; 
     rf12_sendNow(0, &emonth, sizeof emonth);
@@ -115,7 +115,7 @@ void setup() {
   if (debug==1)
   {
     Serial.begin(9600);
-    Serial.println("emonTH"); 
+    Serial.println("emonTH - Firmware V1.2"); 
     Serial.println("OpenEnergyMonitor.org");
     Serial.print("Node: "); 
     Serial.print(nodeID); 
