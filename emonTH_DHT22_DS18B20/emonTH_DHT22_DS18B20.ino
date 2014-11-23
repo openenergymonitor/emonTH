@@ -4,7 +4,7 @@
   Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
   If it finds both sensors the temperature value will be taken from the DS18B20 (external) and DHT22 (internal) and humidity from DHT22
   If it finds only DS18B20 then no humidity value will be reported
-  If it finds only a DHT22 then both temperature and humidity values will be obtained from this sesor
+  If it finds only a DHT22 then both temperature and humidity values will be obtained from this sensor
   
   Technical hardware documentation wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH
  
@@ -167,7 +167,7 @@ void setup() {
   else 
   {
     DHT22_status=1;
-    if (debug==1) Serial.println("Detected DHT22 temp & humidity sesnor");  
+    if (debug==1) Serial.println("Detected DHT22 temp & humidity sensor");  
   }   
  
   //################################################################################################################################
