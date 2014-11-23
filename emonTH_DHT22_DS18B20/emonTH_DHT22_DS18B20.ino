@@ -1,7 +1,7 @@
 /*
   emonTH V1.4 Low Power DHT22 Humidity & Temperature & DS18B20 Temperature Node Example 
 
-  Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
+  Checks at startup for presence of a DS18B20 temp sensor, DHT22 (temp + humidity) or both
   If it finds both sensors the temperature value will be taken from the DS18B20 (external) and DHT22 (internal) and humidity from DHT22
   If it finds only DS18B20 then no humidity value will be reported
   If it finds only a DHT22 then both temperature and humidity values will be obtained from this sensor
