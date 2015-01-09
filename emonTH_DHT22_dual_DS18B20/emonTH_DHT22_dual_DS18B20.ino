@@ -38,7 +38,7 @@
 #include <RFu_JeeLib.h>                                                 
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include "DHT.h"
+#include <DHT.h>
 ISR(WDT_vect) { 
   Sleepy::watchdogEvent(); 
 } // Attached JeeLib sleep function to Atmega328 watchdog - enables MCU to be put into sleep mode between readings to reduce power consumption 
@@ -78,7 +78,7 @@ const int NODE_ID       = 19;
   - Required delay when reading DS18B20
       9bit: 95ms,  10bit: 187ms,  11bit: 375ms,   12bit: 750ms
  */
-const int SECS_BETWEEN_READINGS = 60; // seconds between readings
+const int MINS_BETWEEN_READINGS = 5; // minutes between readings
 const int TEMPERATURE_PRECISION = 11; 
 const int ASYNC_DELAY           = 375;
 
@@ -404,8 +404,12 @@ void take_ds18b20_reading ()
 void sleep_until_next_reading(){
   byte oldADCSRA=ADCSRA;
   byte oldADCSRB=ADCSRB;
-  byte oldADMUX=ADMUX;   
-  Sleepy::loseSomeTime(SECS_BETWEEN_READINGS*1000);  
+  byte oldADMUX=ADMUX;
+  
+  for (int i=0; i<MINS_BETWEEN_READINGS; i++) {
+      Sleepy::loseSomeTime(55000);  
+  }
+  
   ADCSRA=oldADCSRA; // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
