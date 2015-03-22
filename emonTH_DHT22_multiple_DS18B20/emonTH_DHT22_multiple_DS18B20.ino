@@ -95,7 +95,7 @@ const int DHT_PIN      = 18; // Default 18
 const int DS18B20_PWR  = 5;  // Default 5
 const int ONE_WIRE_BUS = 19;  // Default 19
 
-const int ASYNC_DELAY           = 375; // Default 375 - Delay for onewire sensors to respond
+const int ASYNC_DELAY           = 750; // Default 375 - Delay for onewire sensors to respond
 const int TEMPERATURE_PRECISION = 12;  // Default 12  - Onewire temperature sensor precisionn. Details found below.
  /*
   NOTE: - There is a trade off between power consumption and sensor resolution.
