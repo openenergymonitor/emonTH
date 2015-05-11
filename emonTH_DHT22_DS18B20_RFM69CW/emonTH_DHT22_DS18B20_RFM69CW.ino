@@ -1,5 +1,5 @@
 /*
-  emonTH V1.4 Low Power DHT22 Humidity & Temperature & DS18B20 Temperature Node Example 
+  emonTH Low Power DHT22 Humidity & Temperature & DS18B20 Temperature Node Example 
 
   Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
   If it finds both sensors the temperature value will be taken from the DS18B20 (external) and DHT22 (internal) and humidity from DHT22
@@ -33,6 +33,10 @@
   17-30	- Environmental sensing nodes (temperature humidity etc.)
   31	- Special allocation in JeeLib RFM12 driver - Node31 can communicate with nodes on any network group
   -------------------------------------------------------------------------------------------------------------
+;
+  Change log:
+  V1.5         add support for emonTH V1.5 with ATmega328 onboard, RFM69CW and RF node ID DIP switch 
+  V1.5.1      11/05/15 fix bug to make RF node ID DIP switches work 
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
@@ -40,7 +44,7 @@
 
 boolean debug=1;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
 
-#define RF_freq RF12_433MHZ                 // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
+#define RF_freq RF12_868MHZ                 // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
 int nodeID = 19;                               // EmonTH temperature RFM12B node ID - should be unique on network
 const int networkGroup = 210;                // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
                                                                       // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), lower resolution means lower power
@@ -98,8 +102,19 @@ void setup() {
 //################################################################################################################################
   
   pinMode(LED,OUTPUT); digitalWrite(LED,HIGH);                       // Status LED on
-   
-  rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
+     
+  //READ DIP SWITCH POSITIONS - LOW when switched on (default off - pulled up high)
+  pinMode(DIP_switch1, INPUT_PULLUP);
+  pinMode(DIP_switch2, INPUT_PULLUP);
+  boolean DIP1 = digitalRead(DIP_switch1);
+  boolean DIP2 = digitalRead(DIP_switch2);
+  
+  if ((DIP1 == HIGH) && (DIP2 == HIGH)) nodeID=nodeID;
+  if ((DIP1 == LOW) && (DIP2 == HIGH)) nodeID=nodeID+1;
+  if ((DIP1 == HIGH) && (DIP2 == LOW)) nodeID=nodeID+2;
+  if ((DIP1 == LOW) && (DIP2 == LOW)) nodeID=nodeID+3;
+  
+   rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
   
   // Send RFM12B test sequence (for factory testing)
   for (int i=10; i>-1; i--)                                         
@@ -113,23 +128,11 @@ void setup() {
   // end of factory test sequence
   
   rf12_sleep(RF12_SLEEP);
-  
-  //READ DIP SWITCH POSITIONS - LOW when switched on (default off - pulled up high)
-  pinMode(DIP_switch1, INPUT_PULLUP);
-  pinMode(DIP_switch2, INPUT_PULLUP);
-  boolean DIP1 = digitalRead(DIP_switch1);
-  boolean DIP2 = digitalRead(DIP_switch2);
-  
-  if ((DIP1 == HIGH) && (DIP2 == HIGH)) nodeID=nodeID;
-  if ((DIP1 == LOW) && (DIP2 == HIGH)) nodeID=nodeID+1;
-  if ((DIP1 == HIGH) && (DIP2 == LOW)) nodeID=nodeID+2;
-  if ((DIP1 == LOW) && (DIP2 == LOW)) nodeID=nodeID+3;
-  
   if (debug==1)
   {
     Serial.begin(9600);
     Serial.print(DIP1); Serial.println(DIP2);
-    Serial.println("emonTH - Firmware V1.5"); 
+    Serial.println("emonTH - Firmware V1.5.1"); 
     Serial.println("OpenEnergyMonitor.org");
     #if (RF69_COMPAT)
       Serial.println("RFM69CW Init> ");
