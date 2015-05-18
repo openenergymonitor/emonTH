@@ -42,16 +42,16 @@
   -------------------------------------------------------------------------------------------------------------
 */
 
-#define DEBUG 0                      //Set to 1 to few debug serial output, turning debug off increases battery life
+#define DEBUG 1                      //Set to 1 to few debug serial output, turning debug off increases battery life
 
-#define RF_freq RF12_433MHZ         // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
+#define RF_freq RF12_868MHZ         // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
 
 
 //change this 4 parameters
 const int nodeID = 19;              // EmonTH temperature RFM12B node ID - has to be unique on network
 const int networkGroup = 210;       // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
 const int time_between_readings=5;        // in minutes, sleep between wakeups
-#define BLINKLED 1                  // blink led while RF transmission, set to 0 for longer battery life but impact should be minimal
+#define BLINKLED 0                  // blink led while RF transmission, set to 0 for longer battery life but impact should be minimal
 
 
 
