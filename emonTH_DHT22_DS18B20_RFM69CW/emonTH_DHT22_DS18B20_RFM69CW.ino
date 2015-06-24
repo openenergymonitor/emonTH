@@ -86,7 +86,8 @@ typedef struct {                                                      // RFM12B 
   	  int temp;
           int temp_external;
           int humidity;    
-          int battery;          	                                      
+          int battery; 
+          int emc;         	                                      
 } Payload;
 Payload emonth;
 
@@ -279,8 +280,6 @@ void loop()
   
   
   emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
-                                               
-  
   
   if (debug==1) 
   {
@@ -299,6 +298,16 @@ void loop()
       Serial.print("C, DHT22 Humidity: ");
       Serial.print(emonth.humidity/10.0);
       Serial.print("%, ");
+    }
+    
+    if (DHT22_status) {
+      emonth.emc = EMCfromTH(CtoF(emonth.temp / 10.0), emonth.humidity/10.0) * 10.0;
+      Serial.print("EMC: ");
+      Serial.print(emonth.emc / 10.0);
+      Serial.print("%, ");
+    }
+    else {
+      emonth.emc = 0;
     }
     
     Serial.print("Battery voltage: ");  
@@ -341,5 +350,22 @@ void dodelay(unsigned int ms)
   ADCSRA=oldADCSRA;         // restore ADC state
   ADCSRB=oldADCSRB;
   ADMUX=oldADMUX;
+}
+
+float EMCfromTH(float T, float H) {
+  // formula from this page: http://www.csgnetwork.com/emctablecalc.html
+  
+  H /= 100;
+  float Tsquared = T * T;
+  float W = 330 + 0.452 * T + 0.00415 * Tsquared;
+  float K = 0.791 + 0.000463 * T - 0.000000844 * Tsquared;
+  float Ka = 6.34 + 0.000775 * T - 0.0000935 * Tsquared;
+  float Kb = 1.09 + 0.0284 * T - 0.0000904 * Tsquared;
+  float M = 1800 / W * ( K * H / (1 - K * H) + (Ka * K * H + 2 * Ka * Kb * K * K * H * H) / (1 + Ka * K * H + Ka * Kb * K * K * H * H)); 
+  return M;
+}
+
+float CtoF(float C) {
+  return C * 1.8 + 32.0;
 }
 
