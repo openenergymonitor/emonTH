@@ -1,6 +1,6 @@
 # openEMC - Wireless Estimated Moisture Content, Temperature, and Humidity monitoring node
 
-Read more about this project [here](http://the-blog-post), including what EMC is, and why monitoring it is vital to getting the most out of your shop.
+Read more about this project [here](http://openenergymonitor.org/emon/node/10899), including what EMC is, and why monitoring it is vital to getting the most out of your shop.
 
 This software is based on the openenergymonitor.org emonTH project.
 
