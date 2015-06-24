@@ -1,4 +1,7 @@
 /*
+  openEMC Humidity, Temperature, and Equilibrium Moisture Content Node
+  
+  based on:
   emonTH Low Power DHT22 Humidity & Temperature & DS18B20 Temperature Node Example 
 
   Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
