@@ -26,8 +26,8 @@ Builds on JeeLabs, Adafruit and Miles Burton
 * DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
 
 
-## emonTH Firmwarwe
-* **emonTH_DHT22_DS18B20_RFM69CW** - Main EMC, temperature and humidity sensing firmware. Searches for either DHT22 or DS18B20 and reads temperature and humidity once per min (by default), calculates Equilibrium Moisture Content, and tx's data back to the emonBase via RFM69CW. If both sensors are detected temperature will be sensed from DS18B20 and humidity from DHT22 
+## openEMC Firmware
+* **openEMC_DHT22_DS18B20_RFM69CW** - Main EMC, temperature and humidity sensing firmware. Searches for either DHT22 or DS18B20 and reads temperature and humidity once per min (by default), calculates Equilibrium Moisture Content, and tx's data back to the emonBase via RFM69CW. If both sensors are detected temperature will be sensed from DS18B20 and humidity from DHT22 
 
 # License
 The emonTH hardware designs (schematics and CAD files hosted on http://solderpad.com/openenergymon) are licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
