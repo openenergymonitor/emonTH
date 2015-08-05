@@ -42,7 +42,7 @@
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
 #include <JeeLib.h>                                                                      //https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
 
-boolean debug=1;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
+boolean debug=0;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
 
 #define RF_freq RF12_433MHZ                 // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
 int nodeID = 19;                               // EmonTH temperature RFM12B node ID - should be unique on network
@@ -308,8 +308,10 @@ void loop()
   }
 
   
-  power_spi_enable();  
+  power_spi_enable();
+ 
   rf12_sleep(RF12_WAKEUP);
+  delay(20);
   rf12_sendNow(0, &emonth, sizeof emonth);
   // set the sync mode to 2 if the fuses are still the Arduino default
   // mode 3 (full powerdown) can only be used with 258 CK startup fuses
