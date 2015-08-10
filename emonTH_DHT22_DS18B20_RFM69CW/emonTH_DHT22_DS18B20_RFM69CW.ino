@@ -37,22 +37,22 @@
   Change log:
   V1.5         add support for emonTH V1.5 with ATmega328 onboard, RFM69CW and RF node ID DIP switch 
   V1.5.1      11/05/15 fix bug to make RF node ID DIP switches work 
+  V1.6        10/0815 add in delay after RF12_wakeup to improve RF packet loss http://openenergymonitor.org/emon/node/11062
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
 #include <JeeLib.h>                                                                      //https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
 
-boolean debug=0;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
+boolean debug=1;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
 
 #define RF_freq RF12_868MHZ                 // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
 int nodeID = 19;                               // EmonTH temperature RFM12B node ID - should be unique on network
 const int networkGroup = 210;                // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
-                                                                      // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), lower resolution means lower power
+                                                                       // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), lower resolution means lower power
 
 const int time_between_readings= 1;                                   // in minutes
 const int TEMPERATURE_PRECISION=11;                                   // 9 (93.8ms),10 (187.5ms) ,11 (375ms) or 12 (750ms) bits equal to resplution of 0.5C, 0.25C, 0.125C and 0.0625C
 #define ASYNC_DELAY 375                                               // 9bit requres 95ms, 10bit 187ms, 11bit 375ms and 12bit resolution takes 750ms
-
 // See block comment above for library info
 #include <avr/power.h>
 #include <avr/sleep.h>                                           
@@ -132,7 +132,7 @@ void setup() {
   {
     Serial.begin(9600);
     Serial.print(DIP1); Serial.println(DIP2);
-    Serial.println("emonTH - Firmware V1.5.1"); 
+    Serial.println("emonTH - Firmware V1.6"); 
     Serial.println("OpenEnergyMonitor.org");
     #if (RF69_COMPAT)
       Serial.println("RFM69CW Init> ");
@@ -317,20 +317,21 @@ void loop()
   // mode 3 (full powerdown) can only be used with 258 CK startup fuses
   rf12_sendWait(2);
   rf12_sleep(RF12_SLEEP);
+  dodelay(100);
   power_spi_disable();  
-  // digitalWrite(LED,HIGH);
-  // dodelay(100);
-  // digitalWrite(LED,LOW);  
+  digitalWrite(LED,HIGH);
+  dodelay(100);
+  digitalWrite(LED,LOW);  
   
-  byte oldADCSRA=ADCSRA;
-  byte oldADCSRB=ADCSRB;
-  byte oldADMUX=ADMUX;   
-  Sleepy::loseSomeTime(time_between_readings*60*1000);  
-  //Sleepy::loseSomeTime(2000);
-  ADCSRA=oldADCSRA; // restore ADC state
-  ADCSRB=oldADCSRB;
-  ADMUX=oldADMUX;
-}
+  //delay loop, wait for time_between_reading minutes
+  for (int i=0; i<time_between_readings; i++)
+  {
+    dodelay(55000); //1 minute should be 60000 but is not because of variation of internal time source
+    //caution parameter cannot be more than 65000, maybe find better solution
+    //due to internal time source 60000 is longer than 1 minute. so 55s is used.
+  }
+
+} // end loop 
 
 void dodelay(unsigned int ms)
 {
