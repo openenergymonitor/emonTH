@@ -37,7 +37,8 @@
   Change log:
   V1.5         add support for emonTH V1.5 with ATmega328 onboard, RFM69CW and RF node ID DIP switch 
   V1.5.1      11/05/15 fix bug to make RF node ID DIP switches work 
-  V1.6        10/0815 add in delay after RF12_wakeup to improve RF packet loss http://openenergymonitor.org/emon/node/11062
+  V1.6        10/08/15 add in delay after RF12_wakeup to improve RF packet loss http://openenergymonitor.org/emon/node/11062
+  V1.6.1      13/08/15 fix position of delay (after RF12_WAKEUP) http://openenergymonitor.org/emon/node/11062#comment-33251
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
@@ -311,7 +312,7 @@ void loop()
   power_spi_enable();
  
   rf12_sleep(RF12_WAKEUP);
-  delay(20);
+  dodelay(100);
   rf12_sendNow(0, &emonth, sizeof emonth);
   // set the sync mode to 2 if the fuses are still the Arduino default
   // mode 3 (full powerdown) can only be used with 258 CK startup fuses
