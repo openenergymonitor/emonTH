@@ -1,5 +1,5 @@
 // Warm1,2 & 3 pulse count for Kamstrup and gas.  
-bool debug = 0;
+bool debug = 1;
 
 #define RF69_COMPAT 1
 #include <JeeLib.h>
@@ -16,6 +16,11 @@ typedef struct {                                                      // RFM12B 
           int battery;       	                                      
 } Payload;
 Payload emonth;
+
+unsigned long pulsetime = 0;
+
+// minimum width of interrupt pulse (default pulse output meters = 100ms)
+const byte min_pulsewidth= 110;
 
 void setup() {
   pinMode(LED,OUTPUT); digitalWrite(LED,HIGH);
@@ -66,7 +71,11 @@ void loop()
 }
 
 void onPulse() {
-  emonth.pulsecount++;
+  
+  if ( (millis() - pulsetime) > min_pulsewidth) {
+    emonth.pulsecount++;
+    pulsetime=millis(); 
+  }
   
   digitalWrite(LED, HIGH); 
   delay(2); 
