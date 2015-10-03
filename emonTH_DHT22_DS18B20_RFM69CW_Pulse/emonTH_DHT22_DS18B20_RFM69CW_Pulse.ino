@@ -1,5 +1,5 @@
 /*
-  emonTH Low Power DHT22 Humidity & Temperature, DS18B20 Temperature & Pulse counting node 
+  emonTH Low Power DHT22 Humidity & Temperature, DS18B20 Temperature & Pulse counting Node Example 
 
   Checkes at startup for presence of a DS18B20 temp sensor , DHT22 (temp + humidity) or both
   If it finds both sensors the temperature value will be taken from the DS18B20 (external) and DHT22 (internal) and humidity from DHT22
@@ -35,26 +35,24 @@
   -------------------------------------------------------------------------------------------------------------
 ;
   Change log:
-  V 0.1 - Branched from emonTH_DHT22_DS18B20 example, first version of pulse counting version
-  V 0.2 - 60s RF transmit period now uses timer1, pulse events are decoupled from RF transmit
-  
+  v0.1 - Branched from emonTH_DHT22_DS18B20 example, first version of pulse counting version
+  v0.2 - 60s RF transmit period now uses timer1, pulse events are decoupled from RF transmit
+  v0.3 - rebuilt based on low power pulse counting code by Eric Amann: http://openenergymonitor.org/emon/node/10834
 */
 
-#define RF69_COMPAT 1                                                 // Set to 1 if using RFM69CW or 0 is using RFM12B
-#include <JeeLib.h>                                                   // https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
+#define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
+#include <JeeLib.h>                                                                      //https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
 
-boolean debug=1;                                                      // Set to 1 to few debug serial output, turning debug off increases battery life
+boolean debug=1;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
 
-#define RF_freq RF12_433MHZ                                           // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
-int nodeID = 19;                                                      // EmonTH temperature RFM12B node ID - should be unique on network
-const int networkGroup = 210;                                         // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
+#define RF_freq RF12_433MHZ                 // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
+int nodeID = 19;                               // EmonTH temperature RFM12B node ID - should be unique on network
+const int networkGroup = 210;                // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
+                                                                       // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), lower resolution means lower power
 
-// DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), 
-// lower resolution means lower power                                                                      
-const int TEMPERATURE_PRECISION=11;
-// 9bit requres 95ms, 10bit 187ms, 11bit 375ms and 12bit resolution takes 750ms
-#define ASYNC_DELAY 375                                               
-
+const int time_between_readings= 1;                                   // in minutes
+const int TEMPERATURE_PRECISION=11;                                   // 9 (93.8ms),10 (187.5ms) ,11 (375ms) or 12 (750ms) bits equal to resplution of 0.5C, 0.25C, 0.125C and 0.0625C
+#define ASYNC_DELAY 375                                               // 9bit requres 95ms, 10bit 187ms, 11bit 375ms and 12bit resolution takes 750ms
 // See block comment above for library info
 #include <avr/power.h>
 #include <avr/sleep.h>                                           
@@ -85,41 +83,32 @@ DallasTemperature sensors(&oneWire);
 boolean DS18B20;                                                      // create flag variable to store presence of DS18B20 
 
 typedef struct {                                                      // RFM12B RF payload datastructure
-  int temp;
-  int temp_external;
-  int humidity;    
-  int battery;
-  unsigned long pulsecount;        	                                      
+  	  int temp;
+          int temp_external;
+          int humidity;    
+          int battery;
+          unsigned long pulsecount;     	                                      
 } Payload;
 Payload emonth;
+
+
 
 int numSensors; 
 //addresses of sensors, MAX 4!!  
 byte allAddress [4][8];                                              // 8 bytes per address
 
-volatile int f_timer=0;
-byte timer_count = 0;
+//-------------------------------------------------------------------
+const unsigned long WDT_PERIOD = 80;                      // mseconds.
+const unsigned long WDT_MAX_NUMBER = 715;                 // Data sent after   WDT_MAX_NUMBER periods of  WDT_PERIOD ms without pulses
+
+const  unsigned long PULSE_MAX_NUMBER = 100;               // Data sent after PULSE_MAX_NUMBER pulses
+const  unsigned long PULSE_MAX_DURATION = 50;              // Sensor is powered off during PULSE_MAX_DURATION mseconds after a pulse.
+
+volatile unsigned long pulseCount ;
+unsigned long WDT_number;
+boolean  p;
+
 unsigned long now = 0;
-unsigned long loopcount = 0;
-unsigned long pulsecount = 0;
-
-unsigned long pulsetime = 0;
-int min_pulsewidth = 110;
-
-// Timer overflow interrupt
-ISR(TIMER1_OVF_vect)
-{
-  TCNT1=3046;
-  if(f_timer == 0) f_timer = 1;
-}
-
-// Pulse counting
-void onPulse() {
-  if ( (millis() - pulsetime) > min_pulsewidth) {
-    pulsecount++;
-    pulsetime=millis();
-  }
-}
 
 //################################################################################################################################
 //################################################################################################################################
@@ -139,7 +128,7 @@ void setup() {
   if ((DIP1 == HIGH) && (DIP2 == LOW)) nodeID=nodeID+2;
   if ((DIP1 == LOW) && (DIP2 == LOW)) nodeID=nodeID+3;
   
-  rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
+   rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
   
   // Send RFM12B test sequence (for factory testing)
   for (int i=10; i>-1; i--)                                         
@@ -155,9 +144,9 @@ void setup() {
   rf12_sleep(RF12_SLEEP);
   if (debug==1)
   {
-    Serial.begin(115200);
+    Serial.begin(9600);
     Serial.print(DIP1); Serial.println(DIP2);
-    Serial.println("emonTH - DHT22, DS18B20, Pulse"); 
+    Serial.println("emonTH - Firmware V1.6.1"); 
     Serial.println("OpenEnergyMonitor.org");
     #if (RF69_COMPAT)
       Serial.println("RFM69CW Init> ");
@@ -180,6 +169,9 @@ void setup() {
   pinMode(BATT_ADC, INPUT);
   digitalWrite(DHT22_PWR,LOW);
 
+
+
+
   //################################################################################################################################
   // Power Save  - turn off what we don't need - http://www.nongnu.org/avr-libc/user-manual/group__avr__power.html
   //################################################################################################################################
@@ -187,7 +179,7 @@ void setup() {
   if (debug==0) power_usart0_disable();   //disable serial UART
   power_twi_disable();                    //Disable the Two Wire Interface module.
   // power_timer0_disable();              //don't disable necessary for the DS18B20 library
-  // power_timer1_disable();
+  power_timer1_disable();
   power_spi_disable();
  
   //################################################################################################################################
@@ -240,7 +232,7 @@ void setup() {
     DS18B20=1; 
     if (debug==1) {
       Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
-      if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
+       if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
     }
     
   }
@@ -253,19 +245,12 @@ void setup() {
    
   digitalWrite(LED,LOW);
   
-  //------------------------------------------------------------
-  TCCR1A = 0x00;
-  // start the timer counter 3046 counts in ~ 0.19 seconds
-  TCNT1=3046; 
-  // Prescaler for 1:1024, timeout of 4.19s, 
-  // offset by 0.19s so that timer overflows every 4s
-  // 60s sleep time is then achieved by counting 15x 4s periods.
-  TCCR1B = 0x05;
-  TIMSK1=0x01;
-  //------------------------------------------------------------
+  emonth.pulsecount = 0;
+  pulseCount = 0;
+  WDT_number=720;
+  p = 0;
   
-  attachInterrupt(1, onPulse, FALLING);
-  enterSleep();
+  attachInterrupt(1, onPulse, RISING);
 } // end of setup
 
 
@@ -275,115 +260,120 @@ void loop()
 //################################################################################################################################
 { 
   
-  if(f_timer==1)
-  {
-    f_timer = 0;
-    timer_count ++;
-    
-    if (timer_count>14) {
-      timer_count = 0;
-      unsigned long last = now;
-      now = millis();
-      
-      Serial.print("T: ");
-      Serial.print(now-last);
-      Serial.print(" LC: ");
-      Serial.print(loopcount); loopcount = 0;
-      Serial.print(" PC: ");
-      Serial.println(pulsecount);
-      delay(20);
-   
-      if ((DS18B20==0) && (DHT22_status==0))        //if neither DS18B20 or DHT22 is detected flash the LED then goto forever sleep
-      {
-        for (int i=0; i<20; i++)
-        {
-          digitalWrite(LED, HIGH); delay(200); digitalWrite(LED,LOW); delay(200);
-        }
-        cli();                                      //stop responding to interrupts 
-        Sleepy::powerDown();                        //sleep forever
-      }
-
-      if (DS18B20==1)
-      {
-        digitalWrite(DS18B20_PWR, HIGH); dodelay(50); 
-        for(int j=0;j<numSensors;j++) sensors.setResolution(allAddress[j], TEMPERATURE_PRECISION);      // and set the a to d conversion resolution of each.
-        sensors.requestTemperatures();                                        // Send the command to get temperatures
-        dodelay(ASYNC_DELAY); //Must wait for conversion, since we use ASYNC mode
-        float temp=(sensors.getTempC(allAddress[0]));
-        digitalWrite(DS18B20_PWR, LOW);
-        if ((temp<125.0) && (temp>-40.0))
-        {
-          if (DHT22_status==0) emonth.temp=(temp*10);            // if DHT22 is not present assume DS18B20 is primary sensor (internal)
-          if (DHT22_status==1) emonth.temp_external=(temp*10);   // if DHT22 is present assume DS18B20 is external sensor wired into terminal block
-        }
-      }
-      
-      if (DHT22_status==1)
-      { 
-        digitalWrite(DHT22_PWR,HIGH);                                                                                                  // Send the command to get temperatures
-        dodelay(2000);                                             //sleep for 1.5 - 2's to allow sensor to warm up
-        // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-        emonth.humidity = ((dht.readHumidity())*10);
-
-        float temp=(dht.readTemperature());
-        if ((temp<85.0) && (temp>-40.0)) emonth.temp = (temp*10);
-
-        digitalWrite(DHT22_PWR,LOW); 
-      }
-      
-      emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
-      
-      if (debug==1) 
-      {
-        if (DS18B20)
-        {
-          Serial.print("DS18B20 Temperature: ");
-          if (DHT22_status) Serial.print(emonth.temp_external/10.0); 
-          if (!DHT22_status) Serial.print(emonth.temp/10.0);
-          Serial.print("C, ");
-        }
-        
-        if (DHT22_status)
-        {
-          Serial.print("DHT22 Temperature: ");
-          Serial.print(emonth.temp/10.0); 
-          Serial.print("C, DHT22 Humidity: ");
-          Serial.print(emonth.humidity/10.0);
-          Serial.print("%, ");
-        }
-        
-        Serial.print("Battery voltage: ");  
-        Serial.print(emonth.battery/10.0);
-        Serial.print("V, Pulse count: ");  
-        Serial.println(pulsecount);
-        delay(20);
-      }
-
-      emonth.pulsecount = pulsecount;
-      power_spi_enable();
-     
-      rf12_sleep(RF12_WAKEUP);
-      dodelay(100);
-      rf12_sendNow(0, &emonth, sizeof emonth);
-      // set the sync mode to 2 if the fuses are still the Arduino default
-      // mode 3 (full powerdown) can only be used with 258 CK startup fuses
-      rf12_sendWait(2);
-      rf12_sleep(RF12_SLEEP);
-      dodelay(100);
-      power_spi_disable();  
-      digitalWrite(LED,HIGH);
-      dodelay(100);
-      digitalWrite(LED,LOW);
-    
-    }
-    
-    enterSleep();
-  } else {
-    delay(150);
-    enterSleep();
+  if (p) {
+    Sleepy::loseSomeTime(PULSE_MAX_DURATION);
+    // digitalWrite(PULSE_SENSOR_PWR, HIGH);
+    p=0;
   }
   
-  loopcount ++;
+  if (Sleepy::loseSomeTime(WDT_PERIOD)==1) {
+    WDT_number++;
+  }
+  
+  if (WDT_number>=WDT_MAX_NUMBER || pulseCount>=PULSE_MAX_NUMBER) 
+  {
+  
+    cli();
+    emonth.pulsecount += (unsigned int) pulseCount;
+    pulseCount = 0;
+    sei();
+    
+    /*
+    if ((DS18B20==0) && (DHT22_status==0))        //if neither DS18B20 or DHT22 is detected flash the LED then goto forever sleep
+    {
+      for (int i=0; i<20; i++)
+      {
+        digitalWrite(LED, HIGH); delay(200); digitalWrite(LED,LOW); delay(200);
+      }
+      cli();                                      //stop responding to interrupts 
+      Sleepy::powerDown();                        //sleep forever
+    }
+    */
+
+    if (DS18B20==1)
+    {
+      digitalWrite(DS18B20_PWR, HIGH); dodelay(50); 
+      for(int j=0;j<numSensors;j++) sensors.setResolution(allAddress[j], TEMPERATURE_PRECISION);      // and set the a to d conversion resolution of each.
+      sensors.requestTemperatures();                                        // Send the command to get temperatures
+      dodelay(ASYNC_DELAY); //Must wait for conversion, since we use ASYNC mode
+      float temp=(sensors.getTempC(allAddress[0]));
+      digitalWrite(DS18B20_PWR, LOW);
+      if ((temp<125.0) && (temp>-40.0))
+      {
+        if (DHT22_status==0) emonth.temp=(temp*10);            // if DHT22 is not present assume DS18B20 is primary sensor (internal)
+        if (DHT22_status==1) emonth.temp_external=(temp*10);   // if DHT22 is present assume DS18B20 is external sensor wired into terminal block
+      }
+    }
+    
+    if (DHT22_status==1)
+    { 
+      digitalWrite(DHT22_PWR,HIGH);                                                                                                  // Send the command to get temperatures
+      dodelay(2000);                                             //sleep for 1.5 - 2's to allow sensor to warm up
+      // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+      emonth.humidity = ((dht.readHumidity())*10);
+
+      float temp=(dht.readTemperature());
+      if ((temp<85.0) && (temp>-40.0)) emonth.temp = (temp*10);
+
+      digitalWrite(DHT22_PWR,LOW); 
+    }
+    
+    
+    emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
+                                                 
+    
+    
+    if (debug==1) 
+    {
+      if (DS18B20)
+      {
+        Serial.print("DS18B20 Temperature: ");
+        if (DHT22_status) Serial.print(emonth.temp_external/10.0); 
+        if (!DHT22_status) Serial.print(emonth.temp/10.0);
+        Serial.print("C, ");
+      }
+      
+      if (DHT22_status)
+      {
+        Serial.print("DHT22 Temperature: ");
+        Serial.print(emonth.temp/10.0); 
+        Serial.print("C, DHT22 Humidity: ");
+        Serial.print(emonth.humidity/10.0);
+        Serial.print("%, ");
+      }
+      
+      Serial.print("Battery voltage: ");  
+      Serial.print(emonth.battery/10.0);
+      Serial.print("V, Pulse count: ");
+      Serial.print(emonth.pulsecount);
+      Serial.println("n");
+   
+      unsigned long last = now;
+      now = millis();   
+      Serial.println(now-last);
+      
+      delay(100);
+    }
+
+    
+    power_spi_enable();
+   
+    rf12_sleep(RF12_WAKEUP);
+    dodelay(100);
+    rf12_sendNow(0, &emonth, sizeof emonth);
+    // set the sync mode to 2 if the fuses are still the Arduino default
+    // mode 3 (full powerdown) can only be used with 258 CK startup fuses
+    rf12_sendWait(2);
+    rf12_sleep(RF12_SLEEP);
+    dodelay(100);
+    power_spi_disable();  
+    digitalWrite(LED,HIGH);
+    dodelay(100);
+    digitalWrite(LED,LOW);  
+    
+    WDT_number=0;
+  }
+
 } // end loop 
 
 void dodelay(unsigned int ms)
@@ -399,20 +389,10 @@ void dodelay(unsigned int ms)
   ADMUX=oldADMUX;
 }
 
-// Sleep mode
-void enterSleep(void)
+// The interrupt routine - runs each time a rising edge of a pulse is detected
+void onPulse()
 {
-  set_sleep_mode(SLEEP_MODE_IDLE);
-  
-  sleep_enable();
-  
-  power_adc_disable();
-  power_spi_disable();
-  power_timer0_disable();
-  power_timer2_disable();
-  power_twi_disable();  
-
-  sleep_mode();
-  sleep_disable();
-  power_all_enable();
+  // digitalWrite(PULSE_SENSOR_PWR, LOW);       // optical pulse sensor power off
+  p=1;                                       // flag for new pulse set to true
+  pulseCount++;                              // number of pulses since the last RF sent
 }
