@@ -48,9 +48,9 @@
 
 
 //change this 4 parameters
-const int nodeID = 20;              // EmonTH temperature RFM12B node ID - has to be unique on network
+const int nodeID = 19;              // EmonTH temperature RFM12B node ID - has to be unique on network
 const int networkGroup = 210;       // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
-const int time_between_readings=1;        // in minutes, sleep between wakeups
+const int time_between_readings=5  // in minutes, sleep between wakeups
 #define BLINKLED 0                  // blink led while RF transmission, set to 0 for longer battery life but impact should be minimal
 
 
