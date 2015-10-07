@@ -17,7 +17,7 @@
   THIS SKETCH REQUIRES:
 
   Libraries in the standard arduino libraries folder:
-	- RFu JeeLib		https://github.com/openenergymonitor/RFu_jeelib   //library to work with CISECO RFu328 module
+	- JeeLib		https://github.com/jcw/jeelib
 	- DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
         - OneWire library	http://www.pjrc.com/teensy/td_libs_OneWire.html
 	- DallasTemperature	http://download.milesburton.com/Arduino/MaximTemperature/DallasTemperature_LATEST.zip
@@ -35,9 +35,10 @@
   -------------------------------------------------------------------------------------------------------------
 ;
   Change log:
-  v0.1 - Branched from emonTH_DHT22_DS18B20 example, first version of pulse counting version
-  v0.2 - 60s RF transmit period now uses timer1, pulse events are decoupled from RF transmit
-  v0.3 - rebuilt based on low power pulse counting code by Eric Amann: http://openenergymonitor.org/emon/node/10834
+  v2.1 - Branched from emonTH_DHT22_DS18B20 example, first version of pulse counting version
+  v2.2 - 60s RF transmit period now uses timer1, pulse events are decoupled from RF transmit
+  v2.3 - rebuilt based on low power pulse counting code by Eric Amann: http://openenergymonitor.org/emon/node/10834
+  v2.4 - 5 min default transmisson time = 300 ms
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
@@ -99,8 +100,7 @@ byte allAddress [4][8];                                              // 8 bytes 
 
 //-------------------------------------------------------------------
 const unsigned long WDT_PERIOD = 80;                      // mseconds.
-const unsigned long WDT_MAX_NUMBER = 715;                 // Data sent after   WDT_MAX_NUMBER periods of  WDT_PERIOD ms without pulses
-
+const unsigned long WDT_MAX_NUMBER = 3750;          // Data sent after   WDT_MAX_NUMBER periods of  WDT_PERIOD ms without pulses
 const  unsigned long PULSE_MAX_NUMBER = 100;               // Data sent after PULSE_MAX_NUMBER pulses
 const  unsigned long PULSE_MAX_DURATION = 50;              // Sensor is powered off during PULSE_MAX_DURATION mseconds after a pulse.
 
@@ -130,7 +130,7 @@ void setup() {
   
    rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
   
-  // Send RFM12B test sequence (for factory testing)
+  // Send RFM69CW test sequence (for factory testing)
   for (int i=10; i>-1; i--)                                         
   {
     emonth.temp=i; 
@@ -146,7 +146,7 @@ void setup() {
   {
     Serial.begin(9600);
     Serial.print(DIP1); Serial.println(DIP2);
-    Serial.println("emonTH - Firmware V1.6.1"); 
+    Serial.println("emonTH - Firmware V2.4"); 
     Serial.println("OpenEnergyMonitor.org");
     #if (RF69_COMPAT)
       Serial.println("RFM69CW Init> ");
@@ -270,25 +270,14 @@ void loop()
     WDT_number++;
   }
   
-  if (WDT_number>=WDT_MAX_NUMBER || pulseCount>=PULSE_MAX_NUMBER) 
+  if (WDT_number>=WDT_MAX_NUMBER || pulseCount>=PULSE_MAX_NUMBER || now< 10000) 
   {
   
     cli();
     emonth.pulsecount += (unsigned int) pulseCount;
     pulseCount = 0;
     sei();
-    
-    /*
-    if ((DS18B20==0) && (DHT22_status==0))        //if neither DS18B20 or DHT22 is detected flash the LED then goto forever sleep
-    {
-      for (int i=0; i<20; i++)
-      {
-        digitalWrite(LED, HIGH); delay(200); digitalWrite(LED,LOW); delay(200);
-      }
-      cli();                                      //stop responding to interrupts 
-      Sleepy::powerDown();                        //sleep forever
-    }
-    */
+   
 
     if (DS18B20==1)
     {
@@ -350,7 +339,7 @@ void loop()
    
       unsigned long last = now;
       now = millis();   
-      Serial.println(now-last);
+      //Serial.println(now-last);
       
       delay(100);
     }
