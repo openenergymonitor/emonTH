@@ -226,12 +226,9 @@ void setup() {
     
   }
   
-  //if (debug==1) delay(200);
+  if (DEBUG==1) delay(200);
   
   //################################################################################################################################
-  
-  // Serial.print(DS18B20); Serial.print(DHT22_status);
-  // if (debug==1) delay(200);
    
   digitalWrite(LED,LOW);
 } // end of setup
