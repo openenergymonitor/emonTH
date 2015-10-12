@@ -39,6 +39,7 @@
   v2.2 - 60s RF transmit period now uses timer1, pulse events are decoupled from RF transmit
   v2.3 - rebuilt based on low power pulse counting code by Eric Amann: http://openenergymonitor.org/emon/node/10834
   v2.4 - 5 min default transmisson time = 300 ms
+  v2.3 - (12/10/14) don't flash LED on RF transmission to save power
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
@@ -356,9 +357,9 @@ void loop()
     rf12_sleep(RF12_SLEEP);
     dodelay(100);
     power_spi_disable();  
-    digitalWrite(LED,HIGH);
-    dodelay(100);
-    digitalWrite(LED,LOW);  
+    //digitalWrite(LED,HIGH);
+    //dodelay(100);
+    //digitalWrite(LED,LOW);  
     
     WDT_number=0;
   }
