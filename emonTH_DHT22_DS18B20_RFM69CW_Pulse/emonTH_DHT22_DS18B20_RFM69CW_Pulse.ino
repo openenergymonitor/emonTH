@@ -40,6 +40,7 @@
   v2.3 - rebuilt based on low power pulse counting code by Eric Amann: http://openenergymonitor.org/emon/node/10834
   v2.4 - 5 min default transmisson time = 300 ms
   v2.3 - (12/10/14) don't flash LED on RF transmission to save power
+  V2.4 - (15/10/15) activate pulse count pin input pullup to stop spurious pulses when no sensor connected
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
@@ -64,12 +65,14 @@ const int TEMPERATURE_PRECISION=11;                                   // 9 (93.8
 ISR(WDT_vect) { Sleepy::watchdogEvent(); }                            // Attached JeeLib sleep function to Atmega328 watchdog -enables MCU to be put into sleep mode inbetween readings to reduce power consumption 
 
 // Hardwired emonTH pin allocations 
-const int DS18B20_PWR=    5;
-const int DHT22_PWR=      6;
-const int LED=            9;
-const int BATT_ADC=       1;
-const int DIP_switch1=    7;
-const int DIP_switch2=    8;
+const byte DS18B20_PWR=    5;
+const byte DHT22_PWR=      6;
+const byte LED=            9;
+const byte BATT_ADC=       1;
+const byte DIP_switch1=    7;
+const byte DIP_switch2=    8;
+const byte pulse_countINT= 1;                                        // INT 1 / Dig 3 Screw Terminal Block Number 4 on emonTH V1.5 - Change to INT0 DIG2 on emonTH V1.4
+const byte pulse_count_pin=3;                                        // INT 1 / Dig 3 Screw Terminal Block Number 4 on emonTH V1.5 - Change to INT0 DIG2 on emonTH V1.4
 #define ONE_WIRE_BUS      19
 #define DHTPIN            18   
 
@@ -101,10 +104,9 @@ byte allAddress [4][8];                                              // 8 bytes 
 
 //-------------------------------------------------------------------
 const unsigned long WDT_PERIOD = 80;                      // mseconds.
-const unsigned long WDT_MAX_NUMBER = 3750;          // Data sent after   WDT_MAX_NUMBER periods of  WDT_PERIOD ms without pulses
+const unsigned long WDT_MAX_NUMBER = 715;          // Data sent after   WDT_MAX_NUMBER periods of  WDT_PERIOD ms without pulses
 const  unsigned long PULSE_MAX_NUMBER = 100;               // Data sent after PULSE_MAX_NUMBER pulses
-const  unsigned long PULSE_MAX_DURATION = 50;              // Sensor is powered off during PULSE_MAX_DURATION mseconds after a pulse.
-
+const  unsigned long PULSE_MAX_DURATION = 50;              
 volatile unsigned long pulseCount ;
 unsigned long WDT_number;
 boolean  p;
@@ -169,6 +171,7 @@ void setup() {
   pinMode(DS18B20_PWR,OUTPUT);
   pinMode(BATT_ADC, INPUT);
   digitalWrite(DHT22_PWR,LOW);
+  pinMode(pulse_count_pin, INPUT_PULLUP);
 
 
 
@@ -251,7 +254,7 @@ void setup() {
   WDT_number=720;
   p = 0;
   
-  attachInterrupt(1, onPulse, RISING);
+  attachInterrupt(pulse_countINT, onPulse, RISING);
 } // end of setup
 
 
@@ -263,7 +266,6 @@ void loop()
   
   if (p) {
     Sleepy::loseSomeTime(PULSE_MAX_DURATION);
-    // digitalWrite(PULSE_SENSOR_PWR, HIGH);
     p=0;
   }
   
@@ -271,7 +273,7 @@ void loop()
     WDT_number++;
   }
   
-  if (WDT_number>=WDT_MAX_NUMBER || pulseCount>=PULSE_MAX_NUMBER || now< 10000) 
+  if (WDT_number>=WDT_MAX_NUMBER || pulseCount>=PULSE_MAX_NUMBER) 
   {
   
     cli();
@@ -340,7 +342,7 @@ void loop()
    
       unsigned long last = now;
       now = millis();   
-      //Serial.println(now-last);
+      Serial.println(now-last);
       
       delay(100);
     }
@@ -382,7 +384,6 @@ void dodelay(unsigned int ms)
 // The interrupt routine - runs each time a rising edge of a pulse is detected
 void onPulse()
 {
-  // digitalWrite(PULSE_SENSOR_PWR, LOW);       // optical pulse sensor power off
   p=1;                                       // flag for new pulse set to true
   pulseCount++;                              // number of pulses since the last RF sent
 }
