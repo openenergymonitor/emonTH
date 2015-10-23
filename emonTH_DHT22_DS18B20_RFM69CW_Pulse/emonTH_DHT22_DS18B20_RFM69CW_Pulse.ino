@@ -41,6 +41,7 @@
   v2.4 - 5 min default transmisson time = 300 ms
   v2.3 - (12/10/14) don't flash LED on RF transmission to save power
   V2.4 - (15/10/15) activate pulse count pin input pullup to stop spurious pulses when no sensor connected
+  V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
