@@ -335,7 +335,6 @@ void loop()
    
       unsigned long last = now;
       now = millis();   
-      Serial.println(now-last);
       
       delay(100);
     }
