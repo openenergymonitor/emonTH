@@ -199,19 +199,18 @@ void setup() {
   
   if (isnan(t) || isnan(h))                                             // check if returns are valid, if they are NaN (not a number) then something went wrong!
   {
-    if (debug==1) Serial.println(" - Unable to find DHT22 Sensor..trying agin"); delay(100);
     Sleepy::loseSomeTime(1500); 
     float h = dht.readHumidity();  float t = dht.readTemperature();
     if (isnan(t) || isnan(h))   
     {
-      if (debug==1) Serial.println(" - Unable to find DHT22 Sensor for 2nd time..giving up"); 
+      if (debug==1) Serial.println("No DHT22"); 
       DHT22_status=0;
     } 
   } 
   else 
   {
     DHT22_status=1;
-    if (debug==1) Serial.println("Detected DHT22 temp & humidity sesnor");  
+    if (debug==1) Serial.println("Detected DHT22");  
   }   
  
   //################################################################################################################################
@@ -229,7 +228,7 @@ void setup() {
   
   if (numSensors==0)
   {
-    if (debug==1) Serial.println("No DS18B20 detected");
+    if (debug==1) Serial.println("No DS18B20");
     DS18B20=0; 
   } 
   else 
@@ -237,7 +236,7 @@ void setup() {
     DS18B20=1; 
     if (debug==1) {
       Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
-       if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
+       if (DHT22_status==1) Serial.println("DS18B20 & DHT22 found, assume DS18B20 is external");
     }
   }
   if (debug==1) delay(200);
