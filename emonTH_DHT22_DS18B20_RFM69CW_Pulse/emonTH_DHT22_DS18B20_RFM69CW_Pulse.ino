@@ -41,8 +41,10 @@
   v2.3 - (12/10/14) don't flash LED on RF transmission to save power
   V2.4 - (15/10/15) activate pulse count pin input pullup to stop spurious pulses when no sensor connected
   V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
+  V2.6 - (24/10/15) Tweek RF transmission timmng to help reduce RF packet loss
 */
 
+const byte version = 26;         // firmware version divided by 10 e,g 16 = V1.6
                                                                       // These variables control the transmit timing of the emonTH
 const unsigned long WDT_PERIOD = 80;                                  // mseconds.
 const unsigned long WDT_MAX_NUMBER = 690;                             // Data sent after WDT_MAX_NUMBER periods of WDT_PERIOD ms without pulses:
@@ -151,8 +153,8 @@ void setup() {
   {
     Serial.begin(9600);
     Serial.print(DIP1); Serial.println(DIP2);
-    Serial.println("emonTH - Firmware V2.4"); 
     Serial.println("OpenEnergyMonitor.org");
+    Serial.print("emonTH - Firmware V"); Serial.println(version*0.1); 
     #if (RF69_COMPAT)
       Serial.println("RFM69CW Init> ");
     #else
