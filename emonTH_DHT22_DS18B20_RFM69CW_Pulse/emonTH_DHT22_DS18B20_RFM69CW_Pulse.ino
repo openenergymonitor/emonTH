@@ -17,10 +17,10 @@
   THIS SKETCH REQUIRES:
 
   Libraries in the standard arduino libraries folder:
-	- JeeLib		https://github.com/jcw/jeelib
-	- DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
-        - OneWire library	http://www.pjrc.com/teensy/td_libs_OneWire.html
-	- DallasTemperature	http://download.milesburton.com/Arduino/MaximTemperature/DallasTemperature_LATEST.zip
+  - JeeLib		        https://github.com/jcw/jeelib
+  - DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
+  - OneWire library	    http://www.pjrc.com/teensy/td_libs_OneWire.html
+  - DallasTemperature	    http://download.milesburton.com/Arduino/MaximTemperature/DallasTemperature_LATEST.zip
 
   Recommended node ID allocation
   -----------------------------------------------------------------------------------------------------------
@@ -33,7 +33,6 @@
   17-30	- Environmental sensing nodes (temperature humidity etc.)
   31	- Special allocation in JeeLib RFM12 driver - Node31 can communicate with nodes on any network group
   -------------------------------------------------------------------------------------------------------------
-;
   Change log:
   v2.1 - Branched from emonTH_DHT22_DS18B20 example, first version of pulse counting version
   v2.2 - 60s RF transmit period now uses timer1, pulse events are decoupled from RF transmit
@@ -44,17 +43,25 @@
   V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
 */
 
-#define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
-#include <JeeLib.h>                                                                      //https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
+                                                                      // These variables control the transmit timing of the emonTH
+const unsigned long WDT_PERIOD = 80;                                  // mseconds.
+const unsigned long WDT_MAX_NUMBER = 715;                             // Data sent after WDT_MAX_NUMBER periods of WDT_PERIOD ms without pulses, 715x 80 = 57.2 seconds
 
-boolean debug=1;                                       //Set to 1 to few debug serial output, turning debug off increases battery life
+const  unsigned long PULSE_MAX_NUMBER = 100;                          // Data sent after PULSE_MAX_NUMBER pulses
+const  unsigned long PULSE_MAX_DURATION = 50;              
 
-#define RF_freq RF12_433MHZ                 // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
-int nodeID = 19;                               // EmonTH temperature RFM12B node ID - should be unique on network
-const int networkGroup = 210;                // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
-                                                                       // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), lower resolution means lower power
 
-const int time_between_readings= 1;                                   // in minutes
+#define RF69_COMPAT 1                                                 // Set to 1 if using RFM69CW or 0 is using RFM12B
+#include <JeeLib.h>                                                   // https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
+
+boolean debug=1;                                                      // Set to 1 to few debug serial output, turning debug off increases battery life
+
+#define RF_freq RF12_433MHZ                                           // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
+int nodeID = 19;                                                      // EmonTH temperature RFM12B node ID - should be unique on network
+const int networkGroup = 210;                                         // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
+                                                                      // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), 
+                                                                      // lower resolution means lower power
+
 const int TEMPERATURE_PRECISION=11;                                   // 9 (93.8ms),10 (187.5ms) ,11 (375ms) or 12 (750ms) bits equal to resplution of 0.5C, 0.25C, 0.125C and 0.0625C
 #define ASYNC_DELAY 375                                               // 9bit requres 95ms, 10bit 187ms, 11bit 375ms and 12bit resolution takes 750ms
 // See block comment above for library info
@@ -89,26 +96,19 @@ DallasTemperature sensors(&oneWire);
 boolean DS18B20;                                                      // create flag variable to store presence of DS18B20 
 
 typedef struct {                                                      // RFM12B RF payload datastructure
-  	  int temp;
-          int temp_external;
-          int humidity;    
-          int battery;
-          unsigned long pulsecount;     	                                      
+  int temp;
+  int temp_external;
+  int humidity;    
+  int battery;
+  unsigned long pulsecount;     	                                      
 } Payload;
 Payload emonth;
-
-
 
 int numSensors; 
 //addresses of sensors, MAX 4!!  
 byte allAddress [4][8];                                              // 8 bytes per address
 
-//-------------------------------------------------------------------
-const unsigned long WDT_PERIOD = 80;                      // mseconds.
-const unsigned long WDT_MAX_NUMBER = 715;          // Data sent after   WDT_MAX_NUMBER periods of  WDT_PERIOD ms without pulses
-const  unsigned long PULSE_MAX_NUMBER = 100;               // Data sent after PULSE_MAX_NUMBER pulses
-const  unsigned long PULSE_MAX_DURATION = 50;              
-volatile unsigned long pulseCount ;
+volatile unsigned long pulseCount;
 unsigned long WDT_number;
 boolean  p;
 
@@ -174,9 +174,6 @@ void setup() {
   digitalWrite(DHT22_PWR,LOW);
   pinMode(pulse_count_pin, INPUT_PULLUP);
 
-
-
-
   //################################################################################################################################
   // Power Save  - turn off what we don't need - http://www.nongnu.org/avr-libc/user-manual/group__avr__power.html
   //################################################################################################################################
@@ -239,12 +236,10 @@ void setup() {
       Serial.print("Detected "); Serial.print(numSensors); Serial.println(" DS18B20");
        if (DHT22_status==1) Serial.println("DS18B20 and DHT22 found, assuming DS18B20 is external sensor");
     }
-    
   }
   if (debug==1) delay(200);
   
   //################################################################################################################################
-  
   // Serial.print(DS18B20); Serial.print(DHT22_status);
   // if (debug==1) delay(200);
    
@@ -276,13 +271,11 @@ void loop()
   
   if (WDT_number>=WDT_MAX_NUMBER || pulseCount>=PULSE_MAX_NUMBER) 
   {
-  
     cli();
     emonth.pulsecount += (unsigned int) pulseCount;
     pulseCount = 0;
     sei();
    
-
     if (DS18B20==1)
     {
       digitalWrite(DS18B20_PWR, HIGH); dodelay(50); 
@@ -311,11 +304,8 @@ void loop()
       digitalWrite(DHT22_PWR,LOW); 
     }
     
-    
     emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
-                                                 
-    
-    
+       
     if (debug==1) 
     {
       if (DS18B20)
