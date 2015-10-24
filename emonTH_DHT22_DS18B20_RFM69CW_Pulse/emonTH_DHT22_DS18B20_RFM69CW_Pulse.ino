@@ -45,7 +45,8 @@
 
                                                                       // These variables control the transmit timing of the emonTH
 const unsigned long WDT_PERIOD = 80;                                  // mseconds.
-const unsigned long WDT_MAX_NUMBER = 715;                             // Data sent after WDT_MAX_NUMBER periods of WDT_PERIOD ms without pulses, 715x 80 = 57.2 seconds
+const unsigned long WDT_MAX_NUMBER = 715;                             // Data sent after WDT_MAX_NUMBER periods of WDT_PERIOD ms without pulses:
+                                                                      // 715x 80 = 57.2 seconds
 
 const  unsigned long PULSE_MAX_NUMBER = 100;                          // Data sent after PULSE_MAX_NUMBER pulses
 const  unsigned long PULSE_MAX_DURATION = 50;              
@@ -57,7 +58,7 @@ const  unsigned long PULSE_MAX_DURATION = 50;
 boolean debug=1;                                                      // Set to 1 to few debug serial output, turning debug off increases battery life
 
 #define RF_freq RF12_433MHZ                                           // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
-int nodeID = 19;                                                      // EmonTH temperature RFM12B node ID - should be unique on network
+int nodeID = 21;                                                      // EmonTH temperature RFM12B node ID - should be unique on network
 const int networkGroup = 210;                                         // EmonTH RFM12B wireless network group - needs to be same as emonBase and emonGLCD
                                                                       // DS18B20 resolution 9,10,11 or 12bit corresponding to (0.5, 0.25, 0.125, 0.0625 degrees C LSB), 
                                                                       // lower resolution means lower power
