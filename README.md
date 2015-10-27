@@ -19,7 +19,8 @@ http://openenergymonitor.blogspot.com/2014/01/emonth-multiple-ds18b20-sensors.ht
 Builds on JeeLabs, Adafruit and Miles Burton 
 
 ## Libraries Needed
-* RFu_JeeLib: https://github.com/openenergymonitor/RFu_jeelib
+* JeeLib: https://github.com/jcw/jeelib (CURRENT emonTH V1.5)
+* RFu_JeeLib: https://github.com/openenergymonitor/RFu_jeelib (OLD emonTH V1.4)
 * Temperature control library: http://download.milesburton.com/Arduino/MaximTemperature/ (version 372 works with Arduino 1.0) and OneWire library: http://www.pjrc.com/teensy/td_libs_OneWire.html
 * DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
 
