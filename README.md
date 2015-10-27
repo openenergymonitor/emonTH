@@ -9,6 +9,7 @@ Technical Hardware Wiki: http://wiki.openenergymonitor.org/index.php?title=EmonT
 Schematic + CAD: http://solderpad.com/git/openenergymon/emonth
 
 Design & related Blog posts: 
+
 http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
 http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
 http://openenergymonitor.blogspot.com/2013/10/emonth-update-software-power.html
