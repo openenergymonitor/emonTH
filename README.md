@@ -38,11 +38,6 @@ Builds on JeeLabs, Adafruit and Miles Burton
 
 * **emonTH_DHT22_multiple_DS18B20** - Derived from the dual sensor emonTH firmware by Marshall Scholz. Capable of automatically discovering and monitoring up to 60 connected DS18B20 sensors, one DHT22/DHT11, and one analog pin. The downfalls of this version are that it uses slightly more power than the one sensor sketch, and that the sensor order will probably change if an extra sensor is added once the node has been set up. (This can be easily rectified by changing the input logging feed in emonCMS)
 
-* **emonTH_gas_reflection_analogue** - Enables the emonTH as a gas meter node using a phototransistor (or other pulse calculated from analogue input). Note that you will need to experiment to get the best position for your sensing apparatus (recommend an IR LED and matched phototransistor) and configure the sketch accordingly. Average and lowest readings are reported as extra inputs to help with calibration through emonCMS. While power requirements are significantly higher than for temperature monitoring (or interrupt-based pulse monitoring) these should still be respectable; tests are ongoing to determine battery life.
-
-* **emonTH_PulseCounting**
-Old - now merged into Optical (or wired) pulse counting example of interfacing with pulse-output utility meters
-
 * **Simple emonTH Sensor Test** - 
 	* emonTH DHT22 Test 
 	* emonTH DS18B20 Test
@@ -50,9 +45,9 @@ Old - now merged into Optical (or wired) pulse counting example of interfacing w
 
 
 **Note:**
-* Default RFM12B settings: 433Mhz, network: 210, Node: 19 
+* Default RFM12B/RFM69CW settings: 433Mhz, network: 210, Node: 19 
 * Readings are converted to integer when sent over RF multiple by 0.1 in emoncms to restore reading
-* As the RFu_jeelib library sends out packets in individual bytes, 16 bit integers are split into two received values according to Arduino's "little endian" topology
+* As the JeeLib library sends out packets in individual bytes, 16 bit integers are split into two received values according to Arduino's "little endian" topology
 
 # License
 The emonTH hardware designs (schematics and CAD files hosted on http://solderpad.com/openenergymon) are licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
