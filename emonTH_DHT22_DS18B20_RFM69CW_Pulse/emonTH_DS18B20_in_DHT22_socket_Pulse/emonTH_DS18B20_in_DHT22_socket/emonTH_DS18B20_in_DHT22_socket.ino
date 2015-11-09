@@ -154,7 +154,7 @@ void setup() {
     Serial.begin(9600);
     Serial.print(DIP1); Serial.println(DIP2);
     Serial.println("OpenEnergyMonitor.org");
-    Serial.print("emonTH - Firmware V"); Serial.println(version*0.1); 
+    Serial.print("emonTH - *DHT22 in Ds18B20 Socket* Firmware V"); Serial.println(version*0.1); 
     #if (RF69_COMPAT)
       Serial.println("RFM69CW Init> ");
     #else
