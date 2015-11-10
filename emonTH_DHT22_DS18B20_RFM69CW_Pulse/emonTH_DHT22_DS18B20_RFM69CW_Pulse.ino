@@ -76,16 +76,16 @@ const int TEMPERATURE_PRECISION=11;                                   // 9 (93.8
 ISR(WDT_vect) { Sleepy::watchdogEvent(); }                            // Attached JeeLib sleep function to Atmega328 watchdog -enables MCU to be put into sleep mode inbetween readings to reduce power consumption 
 
 // Hardwired emonTH pin allocations 
-const byte DS18B20_PWR=    18;
-const byte DHT22_PWR=      5;
+const byte DS18B20_PWR=    5;
+const byte DHT22_PWR=      6;
 const byte LED=            9;
 const byte BATT_ADC=       1;
 const byte DIP_switch1=    7;
 const byte DIP_switch2=    8;
 const byte pulse_countINT= 1;                                        // INT 1 / Dig 3 Screw Terminal Block Number 4 on emonTH V1.5 - Change to INT0 DIG2 on emonTH V1.4
 const byte pulse_count_pin=3;                                        // INT 1 / Dig 3 Screw Terminal Block Number 4 on emonTH V1.5 - Change to INT0 DIG2 on emonTH V1.4
-#define ONE_WIRE_BUS      6
-#define DHTPIN            19   
+#define ONE_WIRE_BUS       19
+#define DHTPIN             18   
 
 // Humidity code adapted from ladyada' example                        // emonTh DHT22 data pin
 // Uncomment whatever type you're using!
