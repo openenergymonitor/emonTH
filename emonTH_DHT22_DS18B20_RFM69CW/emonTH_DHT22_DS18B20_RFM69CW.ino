@@ -39,6 +39,18 @@
   V1.5.1      11/05/15 fix bug to make RF node ID DIP switches work 
   V1.6        10/08/15 add in delay after RF12_wakeup to improve RF packet loss http://openenergymonitor.org/emon/node/11062
   V1.6.1      13/08/15 fix position of delay (after RF12_WAKEUP) http://openenergymonitor.org/emon/node/11062#comment-33251
+  
+emonhub.conf nodes config:
+
+[[19]]
+    nodename = emonTH_1
+    firmware = emonTH_DHT22_DS18B20_RFM69CW
+    hardware = emonTH_(Node_ID_Switch_DIP1:OFF_DIP2:OFF)
+    [[[rx]]]
+       names = temperature, external temperature, humidity, battery
+       datacode = h
+       scales = 0.1,0.1,0.1,0.1
+       units = C,C,%,V
 */
 
 #define RF69_COMPAT 1                                                              // Set to 1 if using RFM69CW or 0 is using RFM12B
@@ -83,6 +95,8 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 boolean DS18B20;                                                      // create flag variable to store presence of DS18B20 
 
+// Note: Please update emonhub configuration guide on OEM wide packet structure change:
+// https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
 typedef struct {                                                      // RFM12B RF payload datastructure
   	  int temp;
           int temp_external;
