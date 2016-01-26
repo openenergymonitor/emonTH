@@ -42,6 +42,16 @@
   V2.4 - (15/10/15) activate pulse count pin input pullup to stop spurious pulses when no sensor connected
   V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
   V2.6 - (24/10/15) Tweek RF transmission timmng to help reduce RF packet loss
+  
+  [[23]]
+    nodename = emonTH_5
+    firmware = V2.x_emonTH_DHT22_DS18B20_RFM69CW_Pulse
+    hardware = emonTH_(Node_ID_Switch_DIP1:OFF_DIP2:OFF)
+    [[[rx]]]
+       names = temperature, external temperature, humidity, battery, pulseCount
+       datacodes = h,h,h,h,L
+       scales = 0.1,0.1,0.1,0.1,1
+       units = C,C,%,V,p
 */
 
 const byte version = 26;         // firmware version divided by 10 e,g 16 = V1.6
@@ -98,6 +108,8 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 boolean DS18B20;                                                      // create flag variable to store presence of DS18B20 
 
+// Note: Please update emonhub configuration guide on OEM wide packet structure change:
+// https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
 typedef struct {                                                      // RFM12B RF payload datastructure
   int temp;
   int temp_external;
