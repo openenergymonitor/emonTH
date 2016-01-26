@@ -43,6 +43,9 @@
   V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
   V2.6 - (24/10/15) Tweek RF transmission timmng to help reduce RF packet loss
   
+emonhub.conf node decoder:
+See: https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
+
   [[23]]
     nodename = emonTH_5
     firmware = V2.x_emonTH_DHT22_DS18B20_RFM69CW_Pulse
