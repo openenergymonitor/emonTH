@@ -17,7 +17,7 @@
   THIS SKETCH REQUIRES:
 
   Libraries in the standard arduino libraries folder:
-	- RFu JeeLib		https://github.com/openenergymonitor/RFu_jeelib   //library to work with CISECO RFu328 module
+	- JeeLib		https://github.com/jcw/jeelib   //library to work with 
 	- DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
         - OneWire library	http://www.pjrc.com/teensy/td_libs_OneWire.html
 	- DallasTemperature	http://download.milesburton.com/Arduino/MaximTemperature/DallasTemperature_LATEST.zip
