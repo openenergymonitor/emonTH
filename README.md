@@ -45,7 +45,7 @@ Builds on JeeLabs, Adafruit and Miles Burton
 
 * **emonTH_DHT22_DS18B20_RFM69CW_REEDSWITCH**
 
-Low-power sketch for EmonTH V1.5 that counts pulses from a reed switch with debouncing. It aso sends the temperature/humidity every minute. By Eirc_AMANN](https://openenergymonitor.org/emon/user/5027) March 2016
+Low-power sketch for EmonTH V1.5 that counts pulses from a reed switch with debouncing. It aso sends the temperature/humidity every minute. By [Eirc_AMANN](https://openenergymonitor.org/emon/user/5027) March 2016
 [Forum thread development](https://openenergymonitor.org/emon/node/12165)
 
 **Note:**
