@@ -43,6 +43,10 @@ Builds on JeeLabs, Adafruit and Miles Burton
 	* emonTH DS18B20 Test
 	* emonTH temperature search - utility sketch for finding hardware addresses of one or more DS18B20 sensors connected to emonTH one-wire bus - The DallasTemperature library's "tester" sketch may do a better job of this
 
+* **emonTH_DHT22_DS18B20_RFM69CW_REEDSWITCH**
+
+Low-power sketch for EmonTH V1.5 that counts pulses from a reed switch with debouncing. It aso sends the temperature/humidity every minute. By Eirc_AMANN](https://openenergymonitor.org/emon/user/5027) March 2016
+[Forum thread development](https://openenergymonitor.org/emon/node/12165)
 
 **Note:**
 * Default RFM12B/RFM69CW settings: 433Mhz, network: 210, Node: 19 
