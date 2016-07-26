@@ -21,8 +21,8 @@
 | Cost in 1k off      | £1.42 (July16)     |  £4.57 (July16)    | 3.2 times cheaper (£3.15 less!) |
 | Humidity accuracy   | ±2% RH             |  ±2%RH         | n/a |
 | Humidity Range      | 0-100% RH          |  0-100% RH     | n/a|
-| Temperature accuracy | ±1°C from -30~90°C |  ±0.5°C        | -50% |
-| Temperature Range   | -40°C +125°C       |  -40°C +80°C   | +56% |
+| Temperature accuracy | ±0.3°C            |  ±0.5°C        | 40% more accurate |
+| Temperature Range   | -40°C +125°C       |  -40°C +80°C   | 56% more accurate |
 | Sleep Current       | 0.02uA             |  15uA          | 750 times less power |
 | Measurement Current | 0.045mA            |  0.5mA         | 11 times less power |
 | Measurement time    | 0.01s              |  2s            | 200 times faster |
