@@ -18,7 +18,7 @@
 | Metric              | HTU21D             |Si72021| DHT22          | DHT22 vs HTU21D Difference|
 | ------------- | -------------            |------------- | ------------- | ------------- |
 | Cost in 1k off      | £1.42 (July16)     |£2.15|  £4.57 (July16)    | 3.2 times cheaper (£3.15 less!) |
-| Vcc                 | 2.1v - 3.6V        | 1.9V - 3.6V | | |
+| Vcc                 | 2.1v - 3.6V        | 1.9V - 3.6V | 3.3-6V | |
 | Humidity accuracy   | ±2% RH             | ±2% RH |  ±2%RH         | n/a |
 | Humidity Range      | 0-100% RH          | 0-100% RH |  0-100% RH     | n/a|
 | Temperature accuracy | ±0.3°C            | ±0.4°C|  ±0.5°C        | 40% more accurate |
