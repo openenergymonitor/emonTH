@@ -1,10 +1,9 @@
-# HTU21D Temperature & Humidity Sensor
+# HTU21D / Si72021  Temperature & Humidity Sensor
 
 - [OctoPart](https://octopart.com/htu21d-measurement+specialties-30374934)
 - [DataSheet](http://datasheet.octopart.com/HTU21D-Measurement-Specialites-datasheet-22149496.pdf)
 - [Farnell](http://uk.farnell.com/measurement-specialties/htu21d/humidity-digital-3-rh-dfn-6/dp/2393536?CMP=GRHB-OCTOPART)
 
-- £1.42 in 1K off (July 16s)
 - DFM footprint
 - Digital, pre-clibrated
 - I2C
