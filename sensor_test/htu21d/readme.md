@@ -15,7 +15,7 @@
 - Measurement current: 450uA = 0.045mA
 
 
-| Metric              | HTU21D             |Si72021| DHT22          | DHT22 vs HTU21D Difference|
+| Metric              | [HTU21D](https://octopart.com/htu21d-measurement+specialties-30374934)             |[Si72021](https://octopart.com/si7021-a20-im-silicon+labs-52675246)| DHT22          | DHT22 vs HTU21D Difference|
 | ------------- | -------------            |------------- | ------------- | ------------- |
 | Cost in 1k off      | £1.42 (July16)     |£2.15|  £4.57 (July16)    | 3.2 times cheaper (£3.15 less!) |
 | Vcc                 | 2.1v - 3.6V        | 1.9V - 3.6V | 3.3-6V | |
