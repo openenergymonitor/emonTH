@@ -25,7 +25,7 @@
 | Temperature Range   | -40°C +125°C       |  -40°C +125°C  |  -40°C +80°C   | 56% more accurate | -40°C +80°C  |
 | Sleep Current       | 0.02uA             | 0.06uA |  15uA          | 750 times less power | 0.1uA - 0.3uA |
 | Measurement Current | 0.045mA            | 0.09 mA |  0.5mA         | 11 times less power | 0.714mA - 0.350mA |
-| Measurement time    | 0.01s - 0.0026s    | 0.01s - 0.0026s |  2s            | 200 times faster | 1s |
+| Measurement time    | 0.01s - 0.0026s    | 0.01s - 0.0026s |  2s            | 200 times faster | 0.013s |
 | Energy consumed per sample | 0.00045mW   ||  1mW           | 2222 times less power | |
 | Time sampling per day* |  14.4s          ||  2800s         | | |
 | Time sleeping per day* | 86386s          ||  83600s        | | |
