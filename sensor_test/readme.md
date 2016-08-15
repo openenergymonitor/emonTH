@@ -1,18 +1,5 @@
 # Temperature & Humidity Sensor Evaluation and Testing
 
-- [OctoPart](https://octopart.com/htu21d-measurement+specialties-30374934)
-- [DataSheet](http://datasheet.octopart.com/HTU21D-Measurement-Specialites-datasheet-22149496.pdf)
-- [Farnell](http://uk.farnell.com/measurement-specialties/htu21d/humidity-digital-3-rh-dfn-6/dp/2393536?CMP=GRHB-OCTOPART)
-
-- DFM footprint
-- Digital, pre-clibrated
-- I2C
-- 3.3V (min 2.1V, Max 3.6)
-- Typical accuracy of ±2% RH 5%-95%
-- Temperature:  ±1°C from -30~90°C.
-- 2 - 15 ms measurement time (8-12bit)
-- sleep current: 0.02uA
-- Measurement current: 450uA = 0.045mA
 
 
 | Metric              | [HTU21D](https://octopart.com/htu21d-measurement+specialties-30374934)             |[Si72021](https://octopart.com/si7021-a20-im-silicon+labs-52675246)| DHT22          | DHT22 vs HTU21D Difference| [BME280](https://octopart.com/bme280-bosch-52931981) |
