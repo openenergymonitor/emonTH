@@ -7,7 +7,7 @@
   If it finds only a DHT22 then both temperature and humidity values will be obtained from this sesor
 
   Technical hardware documentation wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH
- 
+
   Part of the openenergymonitor.org project
   Licence: GNU GPL V3
 
@@ -322,6 +322,16 @@ void loop()
     }
 
     emonth.battery=int(analogRead(BATT_ADC)*0.03225806);                    //read battery voltage, convert ADC to volts x10
+
+    //Enhanced battery monitoring mode. In this mode battery values
+    //sent in x*1000 mode instead of x*10. This allows to have more accurate
+    //values on emonCMS x.xx instead of x.x
+    // NOTE if you are going to enable this mode you need to
+    // 1. Disable x*10 mode. By commenting line above.
+    // 2. Change multiplier in line 353 Serial.print(emonth.battery/10.0);
+    // 3. Change scales factor in the emonhub node decoder entry for the emonTH
+    // See more https://community.openenergymonitor.org/t/emonth-battery-measurement-accuracy/1317
+    //emonth.battery=int(aread*3.222);
 
     if (debug==1)
     {
