@@ -331,7 +331,7 @@ void loop()
     // 2. Change multiplier in line 353 Serial.print(emonth.battery/10.0);
     // 3. Change scales factor in the emonhub node decoder entry for the emonTH
     // See more https://community.openenergymonitor.org/t/emonth-battery-measurement-accuracy/1317
-    //emonth.battery=int(aread*3.222);
+    //emonth.battery=int(analogRead(BATT_ADC)*3.222);
 
     if (debug==1)
     {
