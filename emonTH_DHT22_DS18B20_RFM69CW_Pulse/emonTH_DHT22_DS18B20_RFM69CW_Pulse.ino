@@ -68,7 +68,11 @@ const  unsigned long PULSE_MAX_DURATION = 50;
 
 
 #define RF69_COMPAT 1                                                 // Set to 1 if using RFM69CW or 0 is using RFM12B
-#include <JeeLib.h>                                                   // https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
+#if RF69_COMPAT
+#include <JeeLib.h>                                                   // only for RFM69CW! ;https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
+#else
+#include <RFuJeeLib.h>                                                // V1.4: RFM_IRQ = 3 and SPI_SS = 4 ; DIG2 IRQ0 is for pulsecount
+#endif
 
 boolean debug=1;                                                      // Set to 1 to few debug serial output, turning debug off increases battery life
 
