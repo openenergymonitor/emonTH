@@ -42,6 +42,7 @@
   V2.4 - (15/10/15) activate pulse count pin input pullup to stop spurious pulses when no sensor connected
   V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
   V2.6 - (24/10/15) Tweek RF transmission timmng to help reduce RF packet loss
+  V2.7 - (04/01/17) Reduce runtime checks and code size of non-debug build
 
 emonhub.conf node decoder:
 See: https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
@@ -57,7 +58,7 @@ See: https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
        units = C,C,%,V,p
 */
 
-const byte version = 26;         // firmware version divided by 10 e,g 16 = V1.6
+const byte version = 27;         // firmware version divided by 10 e,g 16 = V1.6
                                                                       // These variables control the transmit timing of the emonTH
 const unsigned long WDT_PERIOD = 80;                                  // mseconds.
 const unsigned long WDT_MAX_NUMBER = 690;                             // Data sent after WDT_MAX_NUMBER periods of WDT_PERIOD ms without pulses:
@@ -70,7 +71,7 @@ const  unsigned long PULSE_MAX_DURATION = 50;
 #define RF69_COMPAT 1                                                 // Set to 1 if using RFM69CW or 0 is using RFM12B
 #include <JeeLib.h>                                                   // https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
 
-boolean debug=1;                                                      // Set to 1 to few debug serial output, turning debug off increases battery life
+const boolean debug=1;                                                // Set to 1 to few debug serial output, turning debug off increases battery life
 
 #define RF_freq RF12_433MHZ                                           // Frequency of RF12B module can be RF12_433MHZ, RF12_868MHZ or RF12_915MHZ. You should use the one matching the module you have.
 int nodeID = 23;                                                      // EmonTH temperature RFM12B node ID - should be unique on network
