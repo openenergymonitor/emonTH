@@ -2,7 +2,7 @@
 
 **This repo is for emonTH V1.x**
 
-See [emonTH2 repo](github.com/openenergymonitor/emonth2) for latest emonTH V2.x
+See [emonTH2 repo](https://github.com/openenergymonitor/emonth2) for latest emonTH V2.x
 
 
 ***
