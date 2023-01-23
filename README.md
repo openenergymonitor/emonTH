@@ -18,8 +18,8 @@ The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase
 - Easy to set-up - the unit comes pre-assembled and pre-loaded with Arduino compatible firmware. If desired, the code is easily changed via the Arduino IDE and a USB to UART cable.
 - Long Battery Life - The emonTH is powered by two AA batteries through a high efficiency DC-DC boost converter circuit. Taking a reading once every 60s, the emonTH batteries should last for 1-3 years. We recommend rechargeable alkaline batteries for best performance and environmental impact (see blog post).
 - Expansion Options - If desired, the emonTH function can easily be expanded: remote DS18B20 temperature sensors can be attached to the terminal block for outdoor temperature monitoring. Multiple DS18B20 temperature sensors can be connected at once on a digital one-wire bus.
-- An optical sensor can be added for interfacing with a pulse-output utility meter or a relay board could be connected for controlling an appliance.
-- Update: the emonTH now supports multiple DS18B20's. See blog post
+  - An optical sensor can be added for interfacing with a pulse-output utility meter or a relay board could be connected for controlling an appliance.
+  - Update: the emonTH now supports multiple DS18B20's. See blog post
 - New v1.5: Node ID select DIP switch: Select from four unique node ID's via on-board DIP switch
 
 ### Technical
