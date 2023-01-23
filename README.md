@@ -92,7 +92,7 @@ Low-power sketch for EmonTH V1.5 that counts pulses from a reed switch with debo
 - http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
 - http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
 - http://openenergymonitor.blogspot.com/2013/10/emonth-update-software-power.html
-- http://openenergymonitor.blogspot.com/2013/10/aa-battery-considerations.html
+- https://blog.openenergymonitor.org/2013/10/aa-battery/
 - http://openenergymonitor.blogspot.com/2013/11/hardware-manufacture-begins-part-1.html
 - http://openenergymonitor.blogspot.com/2014/01/emonth-multiple-ds18b20-sensors.html
 
