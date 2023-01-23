@@ -45,7 +45,7 @@ The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase
 - Humidity hysteresis: +-0.3%RH
 - Long-term Stability: +-0.5%RH/year
 - Sensing period Average: 2s
-- Independent sensor test report
+- [Independent sensor test report](http://www.kandrsmith.org/RJS/Misc/calib_dht22.html)
 
 **DS18B20 Temperature Sensor**
 
