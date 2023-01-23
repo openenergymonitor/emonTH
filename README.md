@@ -95,6 +95,9 @@ Eagle schematic and board files [https://github.com/openenergymonitor/emonTH/tre
 | Digital 12     | PB4             | (MISO)            | RFM12 SDO              |
 | Digital 13     | PB5             | (SCK)             | RFM12 SCK              |
 
+**Enclosure: 71 x 71 x 27 mm**<br>
+By default, the emonTH is shipped without an SMT mini-B USB connector since the standard case does not allow use of the USB port to power the emonTH. However, a community-contributed 3D printable case design, which does allow use of the USB connector, is available at: http://www.thingiverse.com/thing:365035 
+
 ## Firmware
 
 ### Libraries Needed
