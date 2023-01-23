@@ -64,6 +64,31 @@ New for emonTH V1.5: On-board DIP switch enables 4 RF node IDs to be selected by
 | OFF    | ON     | 21                        | 25                        |
 | ON     | ON     | 22                        | 26                        |
 
+## RF Connectivity
+
+RFM69CW RF module (default 433MHz) is used to transmit data to emonBase (Raspberry Pi + RFM12Pi) or emonPi. The JeeLabs JeeLib Arduino library is used as the driver for the RFM69CW module. The data is in JeeLabs packet format. 
+
+## External DS18B20 Temperature Sensor Connections
+
+Only one DS18B20 sensor can be connected to an emonTH. If a DHT22 sensor is detected, it's assumed the DS18B20 is connected externally. If more than one DS18B20 is required, see alternate emonTH firmware.
+
+- Black - GND
+- Red - Dig 5 (digital I/O 5 is used as the power pin to enable sensor power-down between readings to save power)
+- White - ADC5 (Dig 18) one-wire bus 
+
+## Pulse Sensor Connection
+
+emonTH with V2.6+ pulse firmware supports Optical Pulse counting sensor 
+
+- Black - GND
+- Red - 3.3V
+- Blue - IRQ 1 / Dig3 - Blue 
+
+There is an input pull-up inside the pulse (IRQ) input that is enabled in the standard sketch. Therefore, you can connect a volt-free contact or an SO output between screw terminal 4 (IRQ input, SO+) and screw terminal 3 (GND, SO-) without the need for an additional resistor. If you must connect your contacts between VCC (screw terminal 2) and screw terminal 4, then you must add a pull-down resistor of resistance low enough to overcome the internal pull-up resistor, or you can use a higher-value resistor and modify the sketch to disable the internal pull-up.
+
+If you are using a reed switch, you may find that you get more than one count per pulse. Adding a 0.1 µF capacitor across the reed switch has been shown to eliminate this problem. 
+
+
 ## Hardware
 
 Eagle schematic and board files [https://github.com/openenergymonitor/emonTH/tree/master/hardware](https://github.com/openenergymonitor/emonTH/tree/master/hardware).
