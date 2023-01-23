@@ -31,25 +31,80 @@ The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase
 - Battery life: 1-3 years expected. See blog post
 - On-board LTC3525-3.3 DC-DC boost converter. See emonTH hardware blog post
 
-### Design & related Blog posts:
+### Accuracy
 
-- http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
-- http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
-- http://openenergymonitor.blogspot.com/2013/10/emonth-update-software-power.html
-- http://openenergymonitor.blogspot.com/2013/10/aa-battery-considerations.html
-- http://openenergymonitor.blogspot.com/2013/11/hardware-manufacture-begins-part-1.html
-- http://openenergymonitor.blogspot.com/2014/01/emonth-multiple-ds18b20-sensors.html
+**DHT22 Temperature and Humidity Sensor**
 
-Builds on JeeLabs, Adafruit and Miles Burton
+- Power supply: 3.3-6V DC
+- Output signal: digital signal via single-bus
+- Sensing element: Polymer capacitor
+- Operating range: humidity 0-100%RH; temperature -40 to ~80Celsius
+- Accuracy: humidity +-2%RH(Max +-5%RH); temperature <+-0.5Celsius
+- Resolution: humidity 0.1%RH; temperature 0.1Celsius
+- Repeatability: humidity +-1%RH; temperature +-0.2Celsius
+- Humidity hysteresis: +-0.3%RH
+- Long-term Stability: +-0.5%RH/year
+- Sensing period Average: 2s
+- Independent sensor test report
 
-## Libraries Needed
+**DS18B20 Temperature Sensor**
+
+- Power supply range: 3.0V to 5.5V
+- Accuracy over the range of -10°C to +85°C: ±0.5°C.
+- Storage temperature range:-55°C to +125°C (-67°F to +257°F)
+
+## DIP Switch node ID
+
+New for emonTH V1.5: On-board DIP switch enables 4 RF node IDs to be selected by changing the switch positions. This will enable up to four emonTHs to be configured for use with a single emonBase / emonPi without the need to change the firmware (as before). Up to 30 emonTHs can theoretically connect to a single emonBase / emonPi. A USB to UART cable and Arduino IDE can be used to set additional unique node IDs by changing the nodeID variable at the beginning of the sketch. Alternatively, we are happy to set the node ID for you, before shipping. (Leave us a note with your order) 
+
+| DIP 1  | DIP 2  | RF node ID V1.x firmware  | RF node ID V2.x firmware  |
+|--------|--------|---------------------------|---------------------------|
+| OFF    | OFF    | 19 (default)              | 23 (default)              |
+| ON     | OFF    | 20                        | 24                        |
+| OFF    | ON     | 21                        | 25                        |
+| ON     | ON     | 22                        | 26                        |
+
+## Hardware
+
+Eagle schematic and board files [https://github.com/openenergymonitor/emonTH/tree/master/hardware](https://github.com/openenergymonitor/emonTH/tree/master/hardware).
+
+### Port map
+
+| Arduino        | ATmega328 Port  | Special Function  | emonTH V1.5            |
+|----------------|-----------------|-------------------|------------------------|
+| Analog 0 (D14) | PC0             |                   |                        |
+| Analog 1 (D15) | PC1             |                   | 2x AA Battery Voltage  |
+| Analog 2 (D16) | PC2             |                   |                        |
+| Analog 3 (D17) | PC3             |                   |                        |
+| Analog 4 (D18) | PC4             | (SDA)             | DHT22 Data             |
+| Analog 5 (D19) | PC5             | (SCL)             | DS18B20 One-wire Data  |
+| Analog 6 (D20) |                 |                   |                        |
+| Analog 7 (D21) |                 |                   |                        |
+| Digital 0      | PD0             | (RXD)             | FTDI Tx                |
+| Digital 1      | PD1             | (TXD)             | FTDI Rx                |
+| Digital 2      | PD2             | (int0) PWM        | RFM12B IRQ             |
+| Digital 3      | PD3             | (int1) PWM        | Terminal block         |
+| Digital 4      | PD4             |                   |                        |
+| Digital 5      | PD5             | PWM               | DS18B20 PWR            |
+| Digital 6      | PD6             | PWM               | DHT22 PWR              |
+| Digital 7      | PD7             |                   | DIP 1                  |
+| Digital 8      | PB0             |                   | DIP 2                  |
+| Digital 9      | PB1             | PWM               | LED                    |
+| Digital 10     | PB2             | (SS) PWM          | RFM12B SEL             |
+| Digital 11     | PB3             | (MOSI) PWM        | RFM12 SDI              |
+| Digital 12     | PB4             | (MISO)            | RFM12 SDO              |
+| Digital 13     | PB5             | (SCK)             | RFM12 SCK              |
+
+## Firmware
+
+### Libraries Needed
 * JeeLib: https://github.com/jcw/jeelib (CURRENT emonTH V1.5)
 * RFu_JeeLib: https://github.com/openenergymonitor/RFu_jeelib (OLD emonTH V1.4)
 * Temperature control library: http://download.milesburton.com/Arduino/MaximTemperature/ (version 372 works with Arduino 1.0) and OneWire library: http://www.pjrc.com/teensy/td_libs_OneWire.html
 * DHT22 Sensor Library  https://github.com/adafruit/DHT-sensor-library - be sure to rename the sketch folder to remove the '-'
 
 
-## emonTH Firmwarwe
+### emonTH Firmwarwe
 
 **emonTH_DHT22_DS18B20_RFM69CW_Pulse**  Current main emonTH temperature and humidity sensing firmware (Nov2015). Searches for either DHT22 or DS18B20 and reads temperature and humidity once per min (by default) and tx's data back to the emonBase via RFM69CW. If both sensors are detected temperature will be sensed from DS18B20 and humidity from DHT22. Supports on-board RF nodeID setting via DIP switch selectors. Now supports optical counting sensor. See Wiki for more details http://wiki.openenergymonitor.org/index.php/EmonTH_V1.5
 
@@ -78,6 +133,15 @@ Low-power sketch for EmonTH V1.5 that counts pulses from a reed switch with debo
 * Default RFM12B/RFM69CW settings: 433Mhz, network: 210, Node: 23 (node ID can be changed using [on-board DIP switches](https://wiki.openenergymonitor.org/index.php/EmonTH_V1.5#DIP_Switch_node_ID))
 * Readings are converted to integer when sent over RF multiple by 0.1 in emoncms to restore reading
 * As the JeeLib library sends out packets in individual bytes, 16 bit integers are split into two received values according to Arduino's "little endian" topology
+
+## Design & related Blog posts:
+
+- http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
+- http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
+- http://openenergymonitor.blogspot.com/2013/10/emonth-update-software-power.html
+- http://openenergymonitor.blogspot.com/2013/10/aa-battery-considerations.html
+- http://openenergymonitor.blogspot.com/2013/11/hardware-manufacture-begins-part-1.html
+- http://openenergymonitor.blogspot.com/2014/01/emonth-multiple-ds18b20-sensors.html
 
 ## License
 
