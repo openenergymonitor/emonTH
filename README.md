@@ -12,7 +12,7 @@ It's been designed to be an easy to deploy tool for monitoring building / room t
 
 The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase web-connected base-station (we recommend a Raspberry Pi with an RFM69Pi) which then posts the data to an emonCMS server (e.g. http://emoncms.org) for logging, processing and graphing. The temperature and humidity data can be used to inform a heating control system, feed into a building performance model or simply for general interest. 
 
-## Features
+### Features
 
 - Temperature and Humidity sensing options - Using DHT22 temperature and humidity sensor, or if humidity data is not required a DS18B20 temperature sensor. Both DHT22 and DS18B20 can be used together as shown above for internal and external readings.
 - Easy to set-up - the unit comes pre-assembled and pre-loaded with Arduino compatible firmware. If desired, the code is easily changed via the Arduino IDE and a USB to UART cable.
@@ -22,7 +22,7 @@ The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase
 - Update: the emonTH now supports multiple DS18B20's. See blog post
 - New v1.5: Node ID select DIP switch: Select from four unique node ID's via on-board DIP switch
 
-## Technical
+### Technical
 
 - Microcontroller: ATmega328 @ 3.3V
 - Sensors: DHT22 (temperature & Humidity) / DS18B20 (temperature) sensor options
@@ -31,8 +31,7 @@ The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase
 - Battery life: 1-3 years expected. See blog post
 - On-board LTC3525-3.3 DC-DC boost converter. See emonTH hardware blog post
 
-
-## Design & related Blog posts:
+### Design & related Blog posts:
 
 - http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
 - http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
