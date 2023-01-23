@@ -1,21 +1,38 @@
 # emonTH - Wireless Temperature and Humidity monitoring node
 
-**This repo is for emonTH V1.x**
+**This repo is for emonTH V1.x**, See [emonTH2 repo](https://github.com/openenergymonitor/emonth2) for latest emonTH V2.x
 
-See [emonTH2 repo](https://github.com/openenergymonitor/emonth2) for latest emonTH V2.x
+---
+
+## Overview
+
+The emonTH is an open-source, battery powered, Temperature and Humidity monitoring wireless node.
+
+It's been designed to be an easy to deploy tool for monitoring building / room temperature and humidity.
+
+The data from the emonTH is transmitted via wireless (433/868MHz) to an emonBase web-connected base-station (we recommend a Raspberry Pi with an RFM69Pi) which then posts the data to an emonCMS server (e.g. http://emoncms.org) for logging, processing and graphing. The temperature and humidity data can be used to inform a heating control system, feed into a building performance model or simply for general interest. 
+
+## Features
+
+- Temperature and Humidity sensing options - Using DHT22 temperature and humidity sensor, or if humidity data is not required a DS18B20 temperature sensor. Both DHT22 and DS18B20 can be used together as shown above for internal and external readings.
+- Easy to set-up - the unit comes pre-assembled and pre-loaded with Arduino compatible firmware. If desired, the code is easily changed via the Arduino IDE and a USB to UART cable.
+- Long Battery Life - The emonTH is powered by two AA batteries through a high efficiency DC-DC boost converter circuit. Taking a reading once every 60s, the emonTH batteries should last for 1-3 years. We recommend rechargeable alkaline batteries for best performance and environmental impact (see blog post).
+- Expansion Options - If desired, the emonTH function can easily be expanded: remote DS18B20 temperature sensors can be attached to the terminal block for outdoor temperature monitoring. Multiple DS18B20 temperature sensors can be connected at once on a digital one-wire bus.
+- An optical sensor can be added for interfacing with a pulse-output utility meter or a relay board could be connected for controlling an appliance.
+- Update: the emonTH now supports multiple DS18B20's. See blog post
+- New v1.5: Node ID select DIP switch: Select from four unique node ID's via on-board DIP switch
+
+## Technical
+
+- Microcontroller: ATmega328 @ 3.3V
+- Sensors: DHT22 (temperature & Humidity) / DS18B20 (temperature) sensor options
+- Power: 2 x AA batteries in an on-board holder. LTC3525 3.3V DC-DC boost converter to extend battery life.
+- RF Radio: RFM69CW (RFM12B can also be used)
+- Battery life: 1-3 years expected. See blog post
+- On-board LTC3525-3.3 DC-DC boost converter. See emonTH hardware blog post
 
 
-***
-
-Part of the openenergymonitor.org project
-
-Main emonTH page: http://openenergymonitor.org/emon/modules/emonTH
-
-Technical Hardware Wiki: http://wiki.openenergymonitor.org/index.php?title=EmonTH
-
-Schematic + CAD: http://solderpad.com/git/openenergymon/emonth
-
-Design & related Blog posts:
+## Design & related Blog posts:
 
 http://openenergymonitor.blogspot.com/2013/06/emonth-prototype.html
 http://openenergymonitor.blogspot.com/2013/10/emonth-update-hardware.html
@@ -63,18 +80,21 @@ Low-power sketch for EmonTH V1.5 that counts pulses from a reed switch with debo
 * Readings are converted to integer when sent over RF multiple by 0.1 in emoncms to restore reading
 * As the JeeLib library sends out packets in individual bytes, 16 bit integers are split into two received values according to Arduino's "little endian" topology
 
-# License
-The emonTH hardware designs (schematics and CAD files hosted on http://solderpad.com/openenergymon) are licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
+## License
 
-The emonTH firmware is released under the GNU GPL V3 license
+The hardware designs (schematics and CAD files) are licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
+
+The firmware is released under the GNU GPL V3 license
 
 The documentation is subject to GNU Free Documentation License
 
-The emonTH hardware designs follow the terms of the OSHW (Open-source hardware) Statement of Principles 1.0.
+The hardware designs follow the terms of the OSHW (Open-source hardware) Statement of Principles 1.0. 
 
+## Environmental & Life Cycle
 
+We are passionate about sustainability and are aware of the embodied energy and use of resources involved in electronic manufacture. We try our best to reduce environmental impact wherever possible. We have been inspired by a few projects taking a lead in promoting and making steps towards Ethical and Sustainable Electronics, see our [blog post](http://openenergymonitor.blogspot.com/2013/08/ethical-and-sustainable-electronics.html).
 
-
-
-
- 
+- The printed circuit boards are manufactured in the UK by a manufacturer who uses lead free techniques, complies to the highest environmental industry standard and is actively investing in techniques and equipment to reduce waste and minimize environmental impact (e.g water treatment and recycling). Hot-air leveling was chosen instead of immersion gold finish to reduce environmental impact.
+- Assembly is done in the UK. All components are RoHS compliant and free of conflict materials.
+- Surface freight is used in preference to air shipping when ordering parts in bulk. This consumes 33 times less energy.
+- We have strived to optimise electrical consumption in our hardware to be as low was possible and recommend the use of green, rechargable batteries, see [blog post](http://openenergymonitor.blogspot.com/2013/10/aa-battery-considerations.html).
