@@ -43,6 +43,7 @@
   V2.5 - (23/10/15) default nodeID 23 to enable new emonHub.conf decoder for pulseCount packet structure
   V2.6 - (24/10/15) Tweek RF transmission timmng to help reduce RF packet loss
   V2.7 - (04/01/17) Reduce runtime checks and code size of non-debug build
+  V2.8 - (17/02/23) LowPowerLabs firmware support
 
 emonhub.conf node decoder:
 See: https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
@@ -58,7 +59,12 @@ See: https://github.com/openenergymonitor/emonhub/blob/emon-pi/configuration.md
        units = C,C,%,V,p
 */
 
-const byte version = 27;         // firmware version divided by 10 e,g 16 = V1.6
+#define RFM69_JEELIB_CLASSIC 1
+#define RFM69_LOW_POWER_LABS 3
+
+#define RadioFormat RFM69_LOW_POWER_LABS
+
+const byte version = 28;         // firmware version divided by 10 e,g 16 = V1.6
                                                                       // These variables control the transmit timing of the emonTH
 const unsigned long WDT_PERIOD = 80;                                  // mseconds.
 const unsigned long WDT_MAX_NUMBER = 690;                             // Data sent after WDT_MAX_NUMBER periods of WDT_PERIOD ms without pulses:
@@ -69,6 +75,12 @@ const  unsigned long PULSE_MAX_DURATION = 50;
 
 
 #define RF69_COMPAT 1                                                 // Set to 1 if using RFM69CW or 0 is using RFM12B
+
+#if RadioFormat == RFM69_LOW_POWER_LABS
+  #include <RFM69.h>                             // RFM69 LowPowerLabs radio library
+  RFM69 radio;
+#endif
+
 #include <JeeLib.h>                                                   // https://github.com/jcw/jeelib - Tested with JeeLib 3/11/14
 
 const boolean debug=1;                                                // Set to 1 to few debug serial output, turning debug off increases battery life
@@ -151,20 +163,26 @@ void setup() {
   if ((DIP1 == HIGH) && (DIP2 == LOW)) nodeID=nodeID+2;
   if ((DIP1 == LOW) && (DIP2 == LOW)) nodeID=nodeID+3;
 
-   rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
+  #if RadioFormat == RFM69_LOW_POWER_LABS
+    radio.initialize(RF69_433MHZ,nodeID,networkGroup);  
+    radio.encrypt("89txbe4p8aik5kt3");                                                      // initialize RFM
+    // radio.setPowerLevel(rfPower);
+  #else
+    rf12_initialize(nodeID, RF_freq, networkGroup);                       // Initialize RFM12B
 
-  // Send RFM69CW test sequence (for factory testing)
-  for (int i=10; i>-1; i--)
-  {
-    emonth.temp=i;
-    rf12_sendNow(0, &emonth, sizeof emonth);
-    delay(100);
-  }
-  rf12_sendWait(2);
-  emonth.temp=0;
-  // end of factory test sequence
+    // Send RFM69CW test sequence (for factory testing)
+    for (int i=10; i>-1; i--)
+    {
+      emonth.temp=i;
+      rf12_sendNow(0, &emonth, sizeof emonth);
+      delay(100);
+    }
+    rf12_sendWait(2);
+    emonth.temp=0;
+    // end of factory test sequence 
+    rf12_sleep(RF12_SLEEP);
+  #endif
 
-  rf12_sleep(RF12_SLEEP);
   if (debug==1)
   {
     Serial.begin(9600);
@@ -368,14 +386,19 @@ void loop()
 
     power_spi_enable();
 
-    rf12_sleep(RF12_WAKEUP);
-    dodelay(100);
-    rf12_sendNow(0, &emonth, sizeof emonth);
-    // set the sync mode to 2 if the fuses are still the Arduino default
-    // mode 3 (full powerdown) can only be used with 258 CK startup fuses
-    rf12_sendWait(2);
-    rf12_sleep(RF12_SLEEP);
-    dodelay(100);
+    #if RadioFormat == RFM69_LOW_POWER_LABS
+      radio.send(5, (const void*)(&emonth), sizeof(emonth));
+      radio.sleep();
+    #else
+      rf12_sleep(RF12_WAKEUP);
+      dodelay(100);
+      rf12_sendNow(0, &emonth, sizeof emonth);
+      // set the sync mode to 2 if the fuses are still the Arduino default
+      // mode 3 (full powerdown) can only be used with 258 CK startup fuses
+      rf12_sendWait(2);
+      rf12_sleep(RF12_SLEEP);
+      dodelay(100);
+    #endif
     power_spi_disable();
     //digitalWrite(LED,HIGH);
     //dodelay(100);
